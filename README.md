@@ -1,0 +1,1 @@
+# snes_info_effects
