@@ -37,3 +37,13 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Large SAV files
+0750EV.SAV
+0812EV.SAV
+0861us.sav
+SND0876_VU2010.sav
+VU2014SND.sav
+
+# Other
+.DS_Store
