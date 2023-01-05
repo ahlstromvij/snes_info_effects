@@ -122,7 +122,7 @@ df_2014_subset <- df_2014_subset %>%
                                       a_fewer_refugees > 2 ~ 0,
                                       TRUE ~ NA_real_),
          a_law_order = case_when(a_law_order > 5 ~ 1, # good proposal
-                                 a_fewer_refugees < 6 ~ 0,
+                                 a_law_order < 6 ~ 0,
                                  TRUE ~ NA_real_),
          a_gender_equal = case_when(a_gender_equal > 5 ~ 1, # good proposal
                                     a_gender_equal < 6 ~ 0,
@@ -225,11 +225,11 @@ df_2010_subset <- df_2010_subset %>%
          a_priv_healthcare = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
                                        a_priv_healthcare > 2 & a_priv_healthcare < 88 ~ 0,
                                        TRUE ~ NA_real_),
-         a_fewer_refugees = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
-                                      a_priv_healthcare > 2 & a_priv_healthcare < 88 ~ 0,
+         a_fewer_refugees = case_when(a_fewer_refugees < 3 ~ 1, # good proposal
+                                      a_fewer_refugees > 2 & a_fewer_refugees < 88 ~ 0,
                                       TRUE ~ NA_real_),
          a_law_order = case_when(a_law_order > 5 ~ 1, # good proposal
-                                 a_fewer_refugees < 6 ~ 0,
+                                 a_law_order < 6 ~ 0,
                                  TRUE ~ NA_real_),
          a_gender_equal = case_when(a_gender_equal > 5 ~ 1, # good proposal
                                     a_gender_equal < 6 ~ 0,
@@ -375,11 +375,11 @@ df_2006_subset <- df_2006_subset %>%
          a_priv_healthcare = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
                                        a_priv_healthcare > 2 & a_priv_healthcare < 88 ~ 0,
                                        TRUE ~ NA_real_),
-         a_fewer_refugees = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
-                                      a_priv_healthcare > 2 & a_priv_healthcare < 88 ~ 0,
+         a_fewer_refugees = case_when(a_fewer_refugees < 3 ~ 1, # good proposal
+                                      a_fewer_refugees > 2 & a_fewer_refugees < 88 ~ 0,
                                       TRUE ~ NA_real_),
          a_law_order = case_when(a_law_order > 5 & a_law_order < 88 ~ 1, # good proposal
-                                 a_fewer_refugees < 6 ~ 0,
+                                 a_law_order < 6 ~ 0,
                                  TRUE ~ NA_real_),
          a_gender_equal = case_when(a_gender_equal > 5 & a_gender_equal < 88 ~ 1, # good proposal
                                     a_gender_equal < 6 ~ 0,
@@ -509,11 +509,11 @@ df_2002_subset <- df_2002_subset %>%
          a_priv_healthcare = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
                                        a_priv_healthcare > 2 & a_priv_healthcare < 8 ~ 0,
                                        TRUE ~ NA_real_),
-         a_fewer_refugees = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
-                                      a_priv_healthcare > 2 & a_priv_healthcare < 8 ~ 0,
+         a_fewer_refugees = case_when(a_fewer_refugees < 3 ~ 1, # good proposal
+                                      a_fewer_refugees > 2 & a_fewer_refugees < 8 ~ 0,
                                       TRUE ~ NA_real_),
          a_law_order = case_when(a_law_order > 5 & a_law_order < 88 ~ 1, # good proposal
-                                 a_fewer_refugees < 6 ~ 0,
+                                 a_law_order < 6 ~ 0,
                                  TRUE ~ NA_real_),
          a_gender_equal = case_when(a_gender_equal > 5 & a_gender_equal < 88 ~ 1, # good proposal
                                     a_gender_equal < 6 ~ 0,
@@ -646,11 +646,11 @@ df_1998_subset <- df_1998_subset %>%
          a_priv_healthcare = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
                                        a_priv_healthcare > 2 & a_priv_healthcare < 8 ~ 0,
                                        TRUE ~ NA_real_),
-         a_fewer_refugees = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
-                                      a_priv_healthcare > 2 & a_priv_healthcare < 8 ~ 0,
+         a_fewer_refugees = case_when(a_fewer_refugees < 3 ~ 1, # good proposal
+                                      a_fewer_refugees > 2 & a_fewer_refugees < 8 ~ 0,
                                       TRUE ~ NA_real_),
          a_law_order = case_when(a_law_order > 5 & a_law_order < 88 ~ 1, # good proposal
-                                 a_fewer_refugees < 6 ~ 0,
+                                 a_law_order < 6 ~ 0,
                                  TRUE ~ NA_real_),
          a_gender_equal = case_when(a_gender_equal > 5 & a_gender_equal < 88 ~ 1, # good proposal
                                     a_gender_equal < 6 ~ 0,
