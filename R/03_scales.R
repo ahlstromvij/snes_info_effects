@@ -43,6 +43,16 @@ df_all_years %>%
   aes(x = d_age, y = score, fill = d_age) +
   geom_bar(stat = "identity")
 
+# knowledge by partisanship
+df_all_years %>% 
+  group_by(d_partisanship) %>% 
+  summarise(score = mean(k_sum)) %>% 
+  ggplot() +
+  aes(x = reorder(d_partisanship, score), y = score, fill = d_partisanship) +
+  geom_bar(stat = "identity") +
+  theme(legend.position="none") +
+  coord_flip()
+
 # knowledge scale
 know_scale <- info_scale(items = c("k_s_rep","k_num_mps", "k_spain_eu"),
                          data = df_all_years,
@@ -59,9 +69,51 @@ know_scale$empirical_plots
 
 # construct validity
 df_all_years$knowledge <- know_scale$know_scores
-info_emmeans(knowledge_var = "knowledge",
-             covariates = c("d_income", "d_education","d_gender","d_age"), 
-             data = df_all_years)
+marginal_means <- info_emmeans(knowledge_var = "knowledge",
+                               covariates = c("d_income", "d_education","d_gender","d_age"), 
+                               data = df_all_years)
+marginal_means
+
+# show visually
+png(file="plots/emmeans_income.png", width = 6, height = 6, units = 'in', res = 300)
+data.frame(marginal_means[[1]]) %>% 
+  ggplot() +
+  aes(x = d_income, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/emmeans_education.png", width = 6, height = 6, units = 'in', res = 300)
+data.frame(marginal_means[[2]]) %>% 
+  ggplot() +
+  aes(x = d_education, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/emmeans_gender.png", width = 6, height = 6, units = 'in', res = 300)
+data.frame(marginal_means[[3]]) %>% 
+  ggplot() +
+  aes(x = d_gender, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/emmeans_age.png", width = 6, height = 6, units = 'in', res = 300)
+data.frame(marginal_means[[4]]) %>% 
+  ggplot() +
+  aes(x = d_age, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+dev.off()
 
 # calculate prop scores
 df_all_years$knowledge_binary <- know_scale$know_scores_binary
