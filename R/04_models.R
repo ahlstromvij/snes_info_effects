@@ -205,19 +205,85 @@ df_informed$right_party_informed <- predict(m_right_party, newdata = df_informed
 df_informed$left_party_informed <- predict(m_left_party, newdata = df_informed, type = "response")
 df_informed$no_party_informed <- predict(m_no_party, newdata = df_informed, type = "response")
 
-png(file="plots/info_effect_over_time.png", width = 13, height = 10, units = 'in', res = 300)
+png(file="plots/info_effect_party.png", width = 10, height = 5, units = 'in', res = 300)
 df_informed %>% 
   group_by(year) %>% 
   summarise("Supporting right parties (M, FP, KD, C, SD)" = mean(right_party_informed) - mean(right_party),
             "Supporting left parties (S, MP, V)" = mean(left_party_informed) - mean(left_party),
-            "Supporting no party" = mean(no_party_informed) - mean(no_party),
-            "Reduce public sector" = mean(a_reduce_pub_spend_informed) - mean(a_reduce_pub_spend),
+            "Supporting no party" = mean(no_party_informed) - mean(no_party))  %>% 
+  pivot_longer(cols = -year,
+               names_to = "variable",
+               values_to = "difference")  %>% 
+  mutate(difference = difference * 100) %>% 
+  ggplot() +
+  aes(x = year, y = difference, color = variable) +
+  geom_point() +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(title = "Information effects on PARTY PREFERENCE in the Swedish electorate over time",
+       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
+       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       x = "",
+       y = "Difference (percentage points)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/info_effect_spending.png", width = 10, height = 5, units = 'in', res = 300)
+df_informed %>% 
+  group_by(year) %>% 
+  summarise("Reduce public sector" = mean(a_reduce_pub_spend_informed) - mean(a_reduce_pub_spend),
             "Privatise state-owned businesses" = mean(a_sell_pub_comp_informed) - mean(a_sell_pub_comp),
-            "Increase private health care" = mean(a_priv_healthcare_informed) - mean(a_priv_healthcare),
-            "Accept fewer refugees" = mean(a_fewer_refugees_informed) - mean(a_fewer_refugees),
+            "Increase private health care" = mean(a_priv_healthcare_informed) - mean(a_priv_healthcare))  %>% 
+  pivot_longer(cols = -year,
+               names_to = "variable",
+               values_to = "difference")  %>% 
+  mutate(difference = difference * 100) %>% 
+  ggplot() +
+  aes(x = year, y = difference, color = variable) +
+  geom_point() +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(title = "Information effects on PUBLIC SPENDING in the Swedish electorate over time",
+       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
+       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       x = "",
+       y = "Difference (percentage points)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/info_effect_values.png", width = 10, height = 5, units = 'in', res = 300)
+df_informed %>% 
+  group_by(year) %>% 
+  summarise("Accept fewer refugees" = mean(a_fewer_refugees_informed) - mean(a_fewer_refugees),
             "More law and order" = mean(a_law_order_informed) - mean(a_law_order),
-            "More gender equality" = mean(a_gender_equal_informed) - mean(a_gender_equal),
-            "Abolish nuclear power" = mean(a_no_nuclear_informed) - mean(a_no_nuclear),
+            "More gender equality" = mean(a_gender_equal_informed) - mean(a_gender_equal))  %>% 
+  pivot_longer(cols = -year,
+               names_to = "variable",
+               values_to = "difference")  %>% 
+  mutate(difference = difference * 100) %>% 
+  ggplot() +
+  aes(x = year, y = difference, color = variable) +
+  geom_point() +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(title = "Information effects on POLITICAL VALUES in the Swedish electorate over time",
+       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
+       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       x = "",
+       y = "Difference (percentage points)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/info_effect_policies.png", width = 10, height = 5, units = 'in', res = 300)
+df_informed %>% 
+  group_by(year) %>% 
+  summarise("Abolish nuclear power" = mean(a_no_nuclear_informed) - mean(a_no_nuclear),
             "Leave the EU" = mean(a_leave_eu_informed) - mean(a_leave_eu),
             "Join NATO" = mean(a_join_nato_informed) - mean(a_join_nato))  %>% 
   pivot_longer(cols = -year,
@@ -230,7 +296,7 @@ df_informed %>%
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
   facet_wrap(~variable, scales = "free_y") +
-  labs(title = "Information effects in the Swedish electorate over time",
+  labs(title = "Information effects on POLITICAL POLICIES in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
        x = "",
