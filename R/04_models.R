@@ -39,7 +39,7 @@ m_reduce_pub_spend <- glm(a_reduce_pub_spend ~
                             year:knowledge_binary +
                             d_age +
                             d_gender +
-                            d_religion +
+                            d_class +
                             d_education +
                             d_marital_status +
                             d_income,
@@ -52,7 +52,7 @@ m_sell_pub_comp  <- glm(a_sell_pub_comp ~
                           year:knowledge_binary +
                           d_age +
                           d_gender +
-                          d_religion +
+                          d_class +
                           d_education +
                           d_marital_status +
                           d_income,
@@ -65,7 +65,7 @@ m_priv_healthcare  <- glm(a_priv_healthcare ~
                             year:knowledge_binary +
                             d_age +
                             d_gender +
-                            d_religion +
+                            d_class +
                             d_education +
                             d_marital_status +
                             d_income,
@@ -78,7 +78,7 @@ m_fewer_refugees  <- glm(a_fewer_refugees ~
                            year:knowledge_binary +
                            d_age +
                            d_gender +
-                           d_religion +
+                           d_class +
                            d_education +
                            d_marital_status +
                            d_income,
@@ -91,7 +91,7 @@ m_law_order  <- glm(a_law_order ~
                       year:knowledge_binary +
                       d_age +
                       d_gender +
-                      d_religion +
+                      d_class +
                       d_education +
                       d_marital_status +
                       d_income,
@@ -104,7 +104,7 @@ m_gender_equal  <- glm(a_gender_equal ~
                          year:knowledge_binary +
                          d_age +
                          d_gender +
-                         d_religion +
+                         d_class +
                          d_education +
                          d_marital_status +
                          d_income,
@@ -117,7 +117,7 @@ m_no_nuclear  <- glm(a_no_nuclear ~
                        year:knowledge_binary +
                        d_age +
                        d_gender +
-                       d_religion +
+                       d_class +
                        d_education +
                        d_marital_status +
                        d_income,
@@ -130,7 +130,7 @@ m_leave_eu  <- glm(a_leave_eu ~
                      year:knowledge_binary +
                      d_age +
                      d_gender +
-                     d_religion +
+                     d_class +
                      d_education +
                      d_marital_status +
                      d_income,
@@ -143,7 +143,7 @@ m_join_nato  <- glm(a_join_nato ~
                       year:knowledge_binary +
                       d_age +
                       d_gender +
-                      d_religion +
+                      d_class +
                       d_education +
                       d_marital_status +
                       d_income,
@@ -156,7 +156,7 @@ m_right_party  <- glm(right_party ~
                       year:knowledge_binary +
                       d_age +
                       d_gender +
-                      d_religion +
+                      d_class +
                       d_education +
                       d_marital_status +
                       d_income,
@@ -169,7 +169,7 @@ m_left_party  <- glm(left_party ~
                         year:knowledge_binary +
                         d_age +
                         d_gender +
-                        d_religion +
+                        d_class +
                         d_education +
                         d_marital_status +
                         d_income,
@@ -181,7 +181,7 @@ m_no_party  <- glm(no_party ~
                         year:knowledge_binary +
                         d_age +
                         d_gender +
-                        d_religion +
+                        d_class +
                         d_education +
                         d_marital_status +
                         d_income,
