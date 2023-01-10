@@ -54,7 +54,7 @@ df_all_years %>%
   coord_flip()
 
 # knowledge scale
-know_scale <- info_scale(items = c("k_s_rep","k_num_mps", "k_spain_eu"),
+know_scale <- info_scale(items = c("k_s_rep","k_num_mps","k_spain_eu"),
                          data = df_all_years,
                          binary_cutoff = 1)
 
@@ -70,7 +70,7 @@ know_scale$empirical_plots
 # construct validity
 df_all_years$knowledge <- know_scale$know_scores
 marginal_means <- info_emmeans(knowledge_var = "knowledge",
-                               covariates = c("d_income", "d_education","d_gender","d_age"), 
+                               covariates = c("d_income", "d_education","d_gender","d_age","d_class"), 
                                data = df_all_years)
 marginal_means
 
@@ -115,10 +115,20 @@ data.frame(marginal_means[[4]]) %>%
   theme(legend.position="none")
 dev.off()
 
+png(file="plots/emmeans_class.png", width = 6, height = 6, units = 'in', res = 300)
+data.frame(marginal_means[[5]]) %>% 
+  ggplot() +
+  aes(x = d_class, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+dev.off()
+
 # calculate prop scores
 df_all_years$knowledge_binary <- know_scale$know_scores_binary
 df_all_years$prop_score <- info_prop_scores(knowledge_var = "knowledge_binary", 
-                                            covariates = c("d_income","d_education","d_gender","d_age"), 
+                                            covariates = c("d_income","d_education","d_gender","d_age","d_class"), 
                                             data = df_all_years)
 
 df_all_years %>% 
@@ -128,7 +138,7 @@ df_all_years %>%
 
 # evaluate prop scores
 info_bal_plots(knowledge_var = "knowledge_binary", 
-               covariates = c("d_income","d_education","d_gender","d_age"), 
+               covariates = c("d_income","d_education","d_gender","d_age","d_class"), 
                prop_score ="prop_score", 
                data = df_all_years)
 
