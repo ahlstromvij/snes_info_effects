@@ -6,13 +6,15 @@ library(haven)
 # 2014 data
 df_snes_2014 <- read_sav("data/VU2014SND.sav")
 
+snes_2014_labels <- data.frame(df_snes_2014 %>% purrr::map_chr(attr, "label"))
+
 df_2014_subset <- df_snes_2014 %>% 
   dplyr::select(r1, # gender
                 v7031, # age
                 v7033, # education
                 v7051, # income
                 f78, # marital status
-                f75, # religion (yes/no)
+                v7037, # class
                 v7024, # partisanship,
                 v7025, # party adherence
                 f47a, f47d, # k: party reps for s and m
@@ -34,7 +36,7 @@ df_2014_subset <- df_2014_subset %>%
          d_education = v7033,
          d_income = v7051,
          d_marital_status = f78,
-         d_religion = f75,
+         d_class = v7037,
          d_partisanship = v7024,
          d_party_adherence = v7025,
          k_m_rep = f47a,
@@ -77,8 +79,8 @@ df_2014_subset <- df_2014_subset %>%
                                       d_marital_status == "Sambo" ~ "married",
                                       d_marital_status == "Gift/partnerskap" ~ "married",
                                       d_marital_status == "Änka/änkling" ~ "widow"),
-         d_religion = case_when(d_religion == 1 ~ "yes",
-                                d_religion == 5 ~ "no"),
+         d_class = case_when(d_class == 1 ~ "working_class",
+                             d_class == 2 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
          d_partisanship = as.character(d_partisanship),
          d_partisanship = case_when(d_party_adherence == 4 ~ "inget_parti",
@@ -152,7 +154,7 @@ df_2010_subset <- df_snes_2010 %>%
                 VU10_V7033, # education
                 VU10_V7045, # income
                 VU10_S7, # marital status
-                VU10_V1122, # religion (yes/no)
+                VU10_V7043, # class
                 VU10_V7022, # partisanship,
                 VU10_V7023, # party adherence
                 VU10_RF5, VU10_RF1, # k: party reps for s and m
@@ -174,7 +176,7 @@ df_2010_subset <- df_2010_subset %>%
          d_education = VU10_V7033,
          d_income = VU10_V7045,
          d_marital_status = VU10_S7,
-         d_religion = VU10_V1122,
+         d_class = VU10_V7043,
          d_partisanship = VU10_V7022,
          d_party_adherence = VU10_V7023,
          k_m_rep = VU10_RF1,
@@ -218,11 +220,8 @@ df_2010_subset <- df_2010_subset %>%
                                       d_marital_status == "SP" ~ "single",
                                       d_marital_status == "Gift" ~ "married",
                                       d_marital_status == "Änka/änkeman" ~ "widow"),
-         d_religion = case_when(d_religion == 1 ~ "no",
-                                d_religion == 2 ~ "no",
-                                d_religion == 3 ~ "yes",
-                                d_religion == 4 ~ "yes",
-                                TRUE ~ NA_character_),
+         d_class = case_when(d_class == 1 ~ "working_class",
+                             d_class == 5 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
          d_partisanship = as.character(d_partisanship),
          d_partisanship = case_when(d_party_adherence == 4 ~ "inget_parti",
@@ -265,7 +264,7 @@ df_2006_subset <- df_snes_2006 %>%
                 utbny, # education
                 ink5, # income
                 c9, # marital status
-                v779, # religion (yes/no)
+                v782, # class (subjective)
                 pipa, # partisanship,
                 pisa, # party adherence
                 v603, v605, # k: party reps for s and m (2 and 5 correct, respectively)
@@ -287,7 +286,7 @@ df_2006_subset <- df_2006_subset %>%
          d_education = utbny,
          d_income = ink5,
          d_marital_status = c9,
-         d_religion = v779,
+         d_class = v782,
          d_partisanship = pipa,
          d_party_adherence = pisa,
          k_m_rep = v605,
@@ -331,11 +330,11 @@ df_2006_subset <- df_2006_subset %>%
                                       d_marital_status == "SP" ~ "single",
                                       d_marital_status == "G" ~ "married",
                                       d_marital_status == "Ä" ~ "widow"),
-         d_religion = case_when(d_religion == 1 ~ "no",
-                                d_religion == 2 ~ "no",
-                                d_religion == 3 ~ "yes",
-                                d_religion == 4 ~ "yes",
-                                TRUE ~ NA_character_),
+         d_class = case_when(d_class == 1 ~ "working_class",
+                             d_class == 2 ~ "middle_class",
+                             d_class == 3 ~ "middle_class",
+                             d_class == 4 ~ "working_class",
+                             d_class == 5 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
          d_partisanship = case_when(d_partisanship == 1 ~ "Vänsterpartiet",
                                     d_partisanship == 2 ~ "Socialdemokraterna",
@@ -423,7 +422,7 @@ df_2002_subset <- df_snes_2002 %>%
                 V592, # education
                 V599, # income
                 V587, # marital status
-                V509, # religion (yes/no)
+                V512, # class (subjective)
                 V236, # partisanship,
                 V235, # party adherence
                 V290, V286, # k: party reps for s and m (2 and 5 correct, respectively)
@@ -445,7 +444,7 @@ df_2002_subset <- df_2002_subset %>%
          d_education = V592,
          d_income = V599,
          d_marital_status = V587,
-         d_religion = V509,
+         d_class = V512,
          d_partisanship = V236,
          d_party_adherence = V235,
          k_m_rep = V286,
@@ -489,11 +488,11 @@ df_2002_subset <- df_2002_subset %>%
                                       d_marital_status == "Divorced" ~ "single",
                                       d_marital_status == "Widow/widower" ~ "widow",
                                       d_marital_status == "Registred partner" ~ "married"),
-         d_religion = case_when(d_religion == 1 ~ "yes",
-                                d_religion == 2 ~ "yes",
-                                d_religion == 3 ~ "no",
-                                d_religion == 4 ~ "no",
-                                TRUE ~ NA_character_),
+         d_class = case_when(d_class == 1 ~ "working_class",
+                             d_class == 2 ~ "middle_class",
+                             d_class == 3 ~ "middle_class",
+                             d_class == 4 ~ "working_class",
+                             d_class == 5 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
          d_partisanship = case_when(d_partisanship == "Left Party" ~ "Vänsterpartiet",
                                     d_partisanship == "Social Democrats" ~ "Socialdemokraterna",
@@ -565,7 +564,7 @@ df_1998_subset <- df_snes_1998 %>%
                 v475, # education
                 v485, # income
                 v486, # marital status
-                v398, # religion (yes/no)
+                v407, # class
                 v187, # partisanship,
                 v186, # party adherence
                 v213, v215, # k: party reps for s and m (22 and 55 correct, respectively)
@@ -587,7 +586,7 @@ df_1998_subset <- df_1998_subset %>%
          d_education = v475,
          d_income = v485,
          d_marital_status = v486,
-         d_religion = v398,
+         d_class = v407,
          d_partisanship = v187,
          d_party_adherence = v186,
          k_m_rep = v215,
@@ -634,11 +633,11 @@ df_1998_subset <- df_1998_subset %>%
                                       d_marital_status == "Married woman, living together with her husband" ~ "married",
                                       d_marital_status == "Child under the age of 18" ~ "single",
                                       d_marital_status == "Foster child" ~ "married"),
-         d_religion = case_when(d_religion == 1 ~ "yes",
-                                d_religion == 2 ~ "yes",
-                                d_religion == 3 ~ "no",
-                                d_religion == 4 ~ "no",
-                                TRUE ~ NA_character_),
+         d_class = case_when(d_class == 1 ~ "working_class",
+                             d_class == 2 ~ "middle_class",
+                             d_class == 3 ~ "middle_class",
+                             d_class == 4 ~ "working_class",
+                             d_class == 5 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
          d_partisanship = case_when(d_partisanship == "Left Party" ~ "Vänsterpartiet",
                                     d_partisanship == "Social Democrats" ~ "Socialdemokraterna",
@@ -717,7 +716,7 @@ table(df_all_years$d_age)
 table(df_all_years$d_education)
 table(df_all_years$d_income)
 table(df_all_years$d_marital_status)
-table(df_all_years$d_religion)
+table(df_all_years$d_class)
 table(df_all_years$d_partisanship)
 
 df_all_years <- df_all_years %>% 

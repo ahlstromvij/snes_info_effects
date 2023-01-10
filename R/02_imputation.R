@@ -1,5 +1,6 @@
 set.seed(100)
 
+library(tidyverse)
 library(visdat)
 library(Hmisc)
 
@@ -12,7 +13,7 @@ impute_arg <- aregImpute(~ d_gender +
                            d_education +
                            d_income +
                            d_marital_status +
-                           d_religion +
+                           d_class +
                            d_partisanship +
                            k_m_rep +
                            k_s_rep +
