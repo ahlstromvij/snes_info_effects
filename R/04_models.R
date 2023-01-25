@@ -494,7 +494,7 @@ df_informed %>%
                values_to = "difference")  %>% 
   mutate(difference = difference * 100) %>% 
   ggplot() +
-  aes(x = as.numeric(year), y = difference, color = variable) +
+  aes(x = year, y = difference, color = variable) +
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
@@ -544,7 +544,7 @@ df_informed %>%
                values_to = "difference")  %>% 
   mutate(difference = difference * 100) %>% 
   ggplot() +
-  aes(x = as.numeric(year), y = difference, color = variable) +
+  aes(x = year, y = difference, color = variable) +
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
@@ -569,7 +569,7 @@ df_informed %>%
                values_to = "difference")  %>% 
   mutate(difference = difference * 100) %>% 
   ggplot() +
-  aes(x = as.numeric(year), y = difference, color = variable) +
+  aes(x = year, y = difference, color = variable) +
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
