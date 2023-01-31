@@ -4,7 +4,7 @@ library(tidyverse)
 library(visdat)
 library(Hmisc)
 
-df_all_years <- readRDS("data/df_all_years.rds")
+df_all_years2 <- readRDS("data/df_all_years.rds")
 
 vis_miss(df_all_years)
 
@@ -12,7 +12,6 @@ impute_arg <- aregImpute(~ d_gender +
                            d_age +
                            d_education +
                            d_income +
-                           d_marital_status +
                            d_class +
                            d_partisanship +
                            k_m_rep +
