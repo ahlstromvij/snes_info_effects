@@ -9,31 +9,25 @@ df_all_years <- readRDS("data/df_all_years_scales.rds")
 # add party preference dummies
 table(df_all_years$d_partisanship)
 df_all_years <- df_all_years %>% 
-  mutate(right_party = case_when(d_partisanship == "centerpartiet" |
-                                     d_partisanship == "folkpartiet" |
-                                     d_partisanship == "kristdemokraterna" |
-                                     d_partisanship == "moderaterna" |
-                                     d_partisanship == "sverigedemokraterna" ~ 1,
+  mutate(centerpartiet = case_when(d_partisanship == "centerpartiet" ~ 1,
                                    TRUE ~ 0),
-         left_party = case_when(d_partisanship == "miljöpartiet" |
-                                    d_partisanship == "socialdemokraterna" |
-                                    d_partisanship == "vänsterpartiet" ~ 1,
-                                  TRUE ~ 0),
-         no_party = case_when(d_partisanship == "inget_parti" ~ 1,
+         folkpartiet = case_when(d_partisanship == "folkpartiet" ~ 1,
+                                   TRUE ~ 0),
+         kristdemokraterna = case_when(d_partisanship == "kristdemokraterna" ~ 1,
+                                   TRUE ~ 0),
+         moderaterna = case_when(d_partisanship == "moderaterna" ~ 1,
+                                       TRUE ~ 0),
+         miljopartiet = case_when(d_partisanship == "miljöpartiet" ~ 1,
+                                       TRUE ~ 0),
+         socialdemokraterna = case_when(d_partisanship == "socialdemokraterna" ~ 1,
+                                         TRUE ~ 0),
+         sverigedemokraterna = case_when(d_partisanship == "sverigedemokraterna" ~ 1,
+                                        TRUE ~ 0),
+         vansterpartiet = case_when(d_partisanship == "vänsterpartiet" ~ 1,
+                                         TRUE ~ 0),
+         inget_parti = case_when(d_partisanship == "inget_parti" ~ 1,
                               TRUE ~ 0))
 
-df_all_years %>% 
-  group_by(year) %>% 
-  summarise("right parties" = mean(right_party),
-            "left parties" = mean(left_party),
-            "no party" = mean(no_party)) %>% 
-  pivot_longer(cols = -year,
-               names_to = "party",
-               values_to = "proportion") %>% 
-  ggplot() +
-  aes(x = year, y = proportion, color = party, group = party) +
-  geom_point() +
-  geom_line()
 
 # probability of affirmation as a function of knowledge (continuous) and covariates
 m_reduce_pub_spend_cont <- glm(a_reduce_pub_spend ~ 
@@ -136,7 +130,7 @@ m_join_nato_cont <- glm(a_join_nato ~
                         family = "binomial")
 
 
-m_right_party_cont <- glm(right_party ~ 
+m_centerpartiet_cont <- glm(centerpartiet ~ 
                           knowledge +
                           year:knowledge +
                           d_age +
@@ -147,7 +141,7 @@ m_right_party_cont <- glm(right_party ~
                         data = df_all_years, 
                         family = "binomial")
 
-m_left_party_cont <- glm(left_party ~ 
+m_folkpartiet_cont <- glm(folkpartiet ~ 
                             knowledge +
                             year:knowledge +
                             d_age +
@@ -158,7 +152,7 @@ m_left_party_cont <- glm(left_party ~
                           data = df_all_years, 
                           family = "binomial")
 
-m_no_party_cont <- glm(no_party ~ 
+m_inget_parti_cont <- glm(inget_parti ~ 
                            knowledge +
                            year:knowledge +
                            d_age +
@@ -169,19 +163,93 @@ m_no_party_cont <- glm(no_party ~
                          data = df_all_years, 
                          family = "binomial")
 
+m_kristdemokraterna_cont <- glm(kristdemokraterna ~ 
+                            knowledge +
+                            year:knowledge +
+                            d_age +
+                            d_gender +
+                            d_class +
+                            d_education +
+                            d_income,
+                          data = df_all_years, 
+                          family = "binomial")
+
+m_miljopartiet_cont <- glm(miljopartiet ~ 
+                             knowledge +
+                             year:knowledge +
+                             d_age +
+                             d_gender +
+                             d_class +
+                             d_education +
+                             d_income,
+                           data = df_all_years, 
+                           family = "binomial")
+
+m_moderaterna_cont <- glm(moderaterna ~ 
+                             knowledge +
+                             year:knowledge +
+                             d_age +
+                             d_gender +
+                             d_class +
+                             d_education +
+                             d_income,
+                           data = df_all_years, 
+                           family = "binomial")
+
+m_socialdemokraterna_cont <- glm(socialdemokraterna ~ 
+                                   knowledge +
+                                   year:knowledge +
+                                   d_age +
+                                   d_gender +
+                                   d_class +
+                                   d_education +
+                                   d_income,
+                                 data = df_all_years, 
+                                 family = "binomial")
+
+m_sverigedemokraterna_cont <- glm(sverigedemokraterna ~ 
+                                   knowledge +
+                                   year:knowledge +
+                                   d_age +
+                                   d_gender +
+                                   d_class +
+                                   d_education +
+                                   d_income,
+                                 data = df_all_years, 
+                                 family = "binomial")
+
+m_vansterpartiet_cont <- glm(vansterpartiet ~ 
+                                    knowledge +
+                                    year:knowledge +
+                                    d_age +
+                                    d_gender +
+                                    d_class +
+                                    d_education +
+                                    d_income,
+                                  data = df_all_years, 
+                                  family = "binomial")
+
+# attitudes
 pred_reduce_pub_spend <- ggpredict(m_reduce_pub_spend_cont, c("year","knowledge"))
 pred_sell_pub_comp <- ggpredict(m_sell_pub_comp_cont, c("year","knowledge"))
 pred_priv_healthcare <- ggpredict(m_priv_healthcare_cont, c("year","knowledge"))
 pred_fewer_refugees <- ggpredict(m_fewer_refugees_cont, c("year","knowledge"))
 pred_law_order <- ggpredict(m_law_order_cont, c("year","knowledge"))
 pred_gender_equal <- ggpredict(m_gender_equal_cont, c("year","knowledge"))
-
 pred_no_nuclear <- ggpredict(m_no_nuclear_cont, c("year","knowledge"))
 pred_leave_eu <- ggpredict(m_leave_eu_cont, c("year","knowledge"))
 pred_join_nato <- ggpredict(m_join_nato_cont, c("year","knowledge"))
-pred_right_party <- ggpredict(m_right_party_cont, c("year","knowledge"))
-pred_left_party <- ggpredict(m_left_party_cont, c("year","knowledge"))
-pred_no_party <- ggpredict(m_no_party_cont, c("year","knowledge"))
+
+# party preference
+pred_centerpartiet <- ggpredict(m_centerpartiet_cont, c("year","knowledge"))
+pred_folkpartiet <- ggpredict(m_folkpartiet_cont, c("year","knowledge"))
+pred_inget_parti <- ggpredict(m_inget_parti_cont, c("year","knowledge"))
+pred_kristdemokraterna <- ggpredict(m_kristdemokraterna_cont, c("year","knowledge"))
+pred_moderaterna <- ggpredict(m_moderaterna_cont, c("year","knowledge"))
+pred_miljopartiet <- ggpredict(m_miljopartiet_cont, c("year","knowledge"))
+pred_socialdemokraterna <- ggpredict(m_socialdemokraterna_cont, c("year","knowledge"))
+pred_sverigedemokraterna <- ggpredict(m_sverigedemokraterna_cont, c("year","knowledge"))
+pred_vansterpartiet <- ggpredict(m_vansterpartiet_cont, c("year","knowledge"))
 
 pred_reduce_pub_spend$var <- "reduce_pub_spend"
 pred_sell_pub_comp$var <- "sell_pub"
@@ -189,13 +257,19 @@ pred_priv_healthcare$var <- "priv_healthcare"
 pred_fewer_refugees$var <- "fewer_refugees"
 pred_law_order$var <- "law_order"
 pred_gender_equal$var <- "gender_equal"
-
 pred_no_nuclear$var <- "no_nuclear"
 pred_leave_eu$var <- "leave_eu"
 pred_join_nato$var <- "join_nato"
-pred_right_party$var <- "right_party"
-pred_left_party$var <- "left_party"
-pred_no_party$var <- "no_party"
+
+pred_centerpartiet$var <- "centerpartiet"
+pred_folkpartiet$var <- "folkpartiet"
+pred_inget_parti$var <- "inget_parti"
+pred_kristdemokraterna$var <- "kristdemokraterna"
+pred_moderaterna$var <- "moderaterna"
+pred_miljopartiet$var <- "miljopartiet"
+pred_socialdemokraterna$var <- "socialdemokraterna"
+pred_sverigedemokraterna$var <- "sverigedemokraterna"
+pred_vansterpartiet$var <- "vansterpartiet"
 
 all_preds <- rbind(pred_reduce_pub_spend,
                    pred_sell_pub_comp,
@@ -206,13 +280,36 @@ all_preds <- rbind(pred_reduce_pub_spend,
                    pred_no_nuclear,
                    pred_leave_eu,
                    pred_join_nato,
-                   pred_right_party,
-                   pred_left_party,
-                   pred_no_party)
+                   pred_centerpartiet,
+                   pred_folkpartiet,
+                   pred_inget_parti,
+                   pred_kristdemokraterna,
+                   pred_moderaterna,
+                   pred_miljopartiet,
+                   pred_socialdemokraterna,
+                   pred_sverigedemokraterna,
+                   pred_vansterpartiet)
 
 # has the relationship between knowledge and the variable in question been
 # constant over the years?
+
+all_parties <- c("folkpartiet","centerpartiet","inget_parti","kristdemokraterna",
+                 "moderaterna","miljopartiet","socialdemokraterna","sverigedemokraterna",
+                 "vansterpartiet", "Folkpartiet","Centerpartiet","Inget parti","Kristdemokraterna",
+                 "Moderaterna","Miljöpartiet","Socialdemokraterna","Sverigedemokraterna",
+                 "Vänsterpartiet")
+# party preferences
 all_preds %>% 
+  filter(var %in% all_parties) %>% 
+  mutate(group = as.numeric(as.character(group))) %>% 
+  ggplot() +
+  aes(x = group, y = predicted, group = x, color = x) +
+  geom_line() +
+  # geom_ribbon(aes(ymin=conf.low, ymax=conf.high), alpha=.3, linetype=0) +
+  facet_wrap(~var, scales = "free_y")
+
+all_preds %>% 
+  filter(!var %in% all_parties) %>% 
   mutate(group = as.numeric(as.character(group))) %>% 
   ggplot() +
   aes(x = group, y = predicted, group = x, color = x) +
@@ -330,7 +427,7 @@ m_join_nato  <- glm(a_join_nato ~
                     family = "binomial",
                     weights = prop_score)
 
-m_right_party  <- glm(right_party ~ 
+m_centerpartiet  <- glm(centerpartiet ~ 
                       knowledge_binary +
                       year:knowledge_binary +
                       d_age +
@@ -342,7 +439,7 @@ m_right_party  <- glm(right_party ~
                     family = "binomial",
                     weights = prop_score)
 
-m_left_party  <- glm(left_party ~ 
+m_folkpartiet  <- glm(folkpartiet ~ 
                         knowledge_binary +
                         year:knowledge_binary +
                         d_age +
@@ -354,7 +451,79 @@ m_left_party  <- glm(left_party ~
                       family = "binomial",
                       weights = prop_score)
 
-m_no_party  <- glm(no_party ~ 
+m_inget_parti  <- glm(inget_parti ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_kristdemokraterna  <- glm(kristdemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_miljopartiet  <- glm(miljopartiet ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_moderaterna  <- glm(moderaterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_socialdemokraterna  <- glm(socialdemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_sverigedemokraterna  <- glm(sverigedemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_vansterpartiet  <- glm(vansterpartiet ~ 
                         knowledge_binary +
                         year:knowledge_binary +
                         d_age +
@@ -376,10 +545,16 @@ effect_over_time <- tibble("variable" = (c(rep("a_reduce_pub_spend",6),
                                           rep("a_no_nuclear",6),
                                           rep("a_leave_eu",6),
                                           rep("a_join_nato",6),
-                                          rep("right_party",6),
-                                          rep("left_party",6),
-                                          rep("no_party",6))),
-                           "year" = rep(c("1998","2002","2006","2010","2014","2018"),12),
+                                          rep("centerpartiet",6),
+                                          rep("folkpartiet",6),
+                                          rep("inget_parti",6),
+                                          rep("kristdemokraterna",6),
+                                          rep("miljopartiet",6),
+                                          rep("moderaterna",6),
+                                          rep("socialdemokraterna",6),
+                                          rep("sverigedemokraterna",6),
+                                          rep("vansterpartiet",6))),
+                           "year" = rep(c("1998","2002","2006","2010","2014","2018"),18),
                            "est" = NA,
                            "lwr" = NA,
                            "upr" = NA)
@@ -407,9 +582,15 @@ effect_over_time <- calc_time_effect(models = list(m_reduce_pub_spend,
                                                    m_no_nuclear,
                                                    m_leave_eu,
                                                    m_join_nato,
-                                                   m_right_party,
-                                                   m_left_party,
-                                                   m_no_party), 
+                                                   m_centerpartiet,
+                                                   m_folkpartiet,
+                                                   m_inget_parti,
+                                                   m_kristdemokraterna,
+                                                   m_miljopartiet,
+                                                   m_moderaterna,
+                                                   m_socialdemokraterna,
+                                                   m_sverigedemokraterna,
+                                                   m_vansterpartiet), 
                                      df = effect_over_time)
 
 effect_over_time <- effect_over_time %>% 
@@ -425,17 +606,45 @@ effect_over_time <- effect_over_time %>%
                            "a_join_nato" = "Join NATO",
                            "right_party" = "Supporting right parties",
                            "left_party" = "Supporting left parties",
-                           "no_party" = "Supporting no party"))
+                           "no_party" = "Supporting no party",
+                           "centerpartiet" = "Centerpartiet",
+                           "folkpartiet" = "Folkpartiet",
+                           "inget_parti" = "Inget parti",
+                           "kristdemokraterna" = "Kristdemokraterna",
+                           "miljopartiet" = "Miljöpartiet",
+                           "moderaterna" = "Moderaterna",
+                           "socialdemokraterna" = "Socialdemokraterna",
+                           "sverigedemokraterna" = "Sverigedemokraterna",
+                           "vansterpartiet" = "Vänsterpartiet"))
 
-png(file="plots/knowledge_effects.png", width = 12, height = 8, units = 'in', res = 300)
+png(file="plots/knowledge_effects_party.png", width = 12, height = 8, units = 'in', res = 300)
 effect_over_time %>% 
+  filter(variable %in% all_parties) %>% 
   ggplot() +
   aes(x = year, y = est, color = variable) +
   geom_line(group = 1) +
   geom_pointrange(aes(ymin = lwr, ymax = upr)) +
   geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable, scales = "free_y") +
-  labs(title = "Effects from knowledge in the Swedish electorate over time",
+  facet_wrap(~variable) +
+  labs(title = "Effects from knowledge on PARTY PREFERENCE in the Swedish electorate over time",
+       subtitle = "Effects measure difference in logged odds of agreement of moving from uninformed to informed",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
+       x = "",
+       y = "Difference (logged odds)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none")
+dev.off()
+
+png(file="plots/knowledge_effects_attitudes.png", width = 12, height = 8, units = 'in', res = 300)
+effect_over_time %>% 
+  filter(!variable %in% all_parties) %>% 
+  ggplot() +
+  aes(x = year, y = est, color = variable) +
+  geom_line(group = 1) +
+  geom_pointrange(aes(ymin = lwr, ymax = upr)) +
+  geom_hline(yintercept=0, color = "grey") +
+  facet_wrap(~variable) +
+  labs(title = "Effects from knowledge on POLITICAL ATTITUDES in the Swedish electorate over time",
        subtitle = "Effects measure difference in logged odds of agreement of moving from uninformed to informed",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
@@ -457,16 +666,29 @@ df_informed$a_gender_equal_informed <- predict(m_gender_equal, newdata = df_info
 df_informed$a_no_nuclear_informed <- predict(m_no_nuclear, newdata = df_informed, type = "response")
 df_informed$a_leave_eu_informed <- predict(m_leave_eu, newdata = df_informed, type = "response")
 df_informed$a_join_nato_informed <- predict(m_join_nato, newdata = df_informed, type = "response")
-df_informed$right_party_informed <- predict(m_right_party, newdata = df_informed, type = "response")
-df_informed$left_party_informed <- predict(m_left_party, newdata = df_informed, type = "response")
-df_informed$no_party_informed <- predict(m_no_party, newdata = df_informed, type = "response")
 
-png(file="plots/info_effect_party.png", width = 10, height = 5, units = 'in', res = 300)
+df_informed$centerpartiet_informed <- predict(m_centerpartiet, newdata = df_informed, type = "response")
+df_informed$folkpartiet_informed <- predict(m_folkpartiet, newdata = df_informed, type = "response")
+df_informed$inget_parti_informed <- predict(m_inget_parti, newdata = df_informed, type = "response")
+df_informed$kristdemokraterna_informed <- predict(m_kristdemokraterna, newdata = df_informed, type = "response")
+df_informed$miljopartiet_informed <- predict(m_miljopartiet, newdata = df_informed, type = "response")
+df_informed$moderaterna_informed <- predict(m_moderaterna, newdata = df_informed, type = "response")
+df_informed$socialdemokraterna_informed <- predict(m_socialdemokraterna, newdata = df_informed, type = "response")
+df_informed$sverigedemokraterna_informed <- predict(m_sverigedemokraterna, newdata = df_informed, type = "response")
+df_informed$vansterpartiet_informed <- predict(m_vansterpartiet, newdata = df_informed, type = "response")
+
+png(file="plots/info_effect_party.png", width = 12, height =8, units = 'in', res = 300)
 df_informed %>% 
   group_by(year) %>% 
-  summarise("Supporting right parties (M, FP, KD, C, SD)" = mean(right_party_informed) - mean(right_party),
-            "Supporting left parties (S, MP, V)" = mean(left_party_informed) - mean(left_party),
-            "Supporting no party" = mean(no_party_informed) - mean(no_party))  %>% 
+  summarise("Centerpartiet" = mean(centerpartiet_informed) - mean(centerpartiet),
+            "Folkpartiet" = mean(folkpartiet_informed) - mean(folkpartiet),
+            "Kristdemokraterna" = mean(kristdemokraterna_informed) - mean(kristdemokraterna),
+            "Miljöpartiet" = mean(miljopartiet_informed) - mean(miljopartiet),
+            "Moderaterna" = mean(moderaterna_informed) - mean(moderaterna),
+            "Socialdemokraterna" = mean(socialdemokraterna_informed) - mean(socialdemokraterna),
+            "Sverigedemokraterna" = mean(sverigedemokraterna_informed) - mean(sverigedemokraterna),
+            "Vänsterpartiet" = mean(vansterpartiet_informed) - mean(vansterpartiet),
+            "Inget parti" = mean(inget_parti_informed) - mean(inget_parti))  %>% 
   pivot_longer(cols = -year,
                names_to = "variable",
                values_to = "difference")  %>% 
@@ -476,7 +698,7 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable, scales = "free_y") +
+  facet_wrap(~variable) +
   labs(title = "Information effects on PARTY PREFERENCE in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
@@ -486,60 +708,16 @@ df_informed %>%
   theme(legend.position="none")
 dev.off()
 
-png(file="plots/info_effect_spending.png", width = 10, height = 5, units = 'in', res = 300)
+png(file="plots/info_effect_attitudes.png", width = 12, height = 8, units = 'in', res = 300)
 df_informed %>% 
   group_by(year) %>% 
   summarise("Reduce public sector" = mean(a_reduce_pub_spend_informed) - mean(a_reduce_pub_spend),
             "Privatise state-owned businesses" = mean(a_sell_pub_comp_informed) - mean(a_sell_pub_comp),
-            "Increase private health care" = mean(a_priv_healthcare_informed) - mean(a_priv_healthcare))  %>% 
-  pivot_longer(cols = -year,
-               names_to = "variable",
-               values_to = "difference")  %>% 
-  mutate(difference = difference * 100) %>% 
-  ggplot() +
-  aes(x = year, y = difference, color = variable) +
-  geom_point() +
-  geom_line(group = 1) +
-  geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable, scales = "free_y") +
-  labs(title = "Information effects on PUBLIC SPENDING in the Swedish electorate over time",
-       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
-       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
-       x = "",
-       y = "Difference (percentage points)") +
-  theme(plot.title = element_text(face="bold")) +
-  theme(legend.position="none")
-dev.off()
-
-png(file="plots/info_effect_values.png", width = 10, height = 5, units = 'in', res = 300)
-df_informed %>% 
-  group_by(year) %>% 
-  summarise("Accept fewer refugees" = mean(a_fewer_refugees_informed) - mean(a_fewer_refugees),
+            "Increase private health care" = mean(a_priv_healthcare_informed) - mean(a_priv_healthcare),
+            "Accept fewer refugees" = mean(a_fewer_refugees_informed) - mean(a_fewer_refugees),
             "More law and order" = mean(a_law_order_informed) - mean(a_law_order),
-            "More gender equality" = mean(a_gender_equal_informed) - mean(a_gender_equal))  %>% 
-  pivot_longer(cols = -year,
-               names_to = "variable",
-               values_to = "difference")  %>% 
-  mutate(difference = difference * 100) %>% 
-  ggplot() +
-  aes(x = year, y = difference, color = variable) +
-  geom_point() +
-  geom_line(group = 1) +
-  geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable, scales = "free_y") +
-  labs(title = "Information effects on POLITICAL VALUES in the Swedish electorate over time",
-       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
-       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
-       x = "",
-       y = "Difference (percentage points)") +
-  theme(plot.title = element_text(face="bold")) +
-  theme(legend.position="none")
-dev.off()
-
-png(file="plots/info_effect_policies.png", width = 10, height = 5, units = 'in', res = 300)
-df_informed %>% 
-  group_by(year) %>% 
-  summarise("Abolish nuclear power" = mean(a_no_nuclear_informed) - mean(a_no_nuclear),
+            "More gender equality" = mean(a_gender_equal_informed) - mean(a_gender_equal),
+            "Abolish nuclear power" = mean(a_no_nuclear_informed) - mean(a_no_nuclear),
             "Leave the EU" = mean(a_leave_eu_informed) - mean(a_leave_eu),
             "Join NATO" = mean(a_join_nato_informed) - mean(a_join_nato))  %>% 
   pivot_longer(cols = -year,
@@ -551,10 +729,10 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable, scales = "free_y") +
-  labs(title = "Information effects on POLITICAL POLICIES in the Swedish electorate over time",
+  facet_wrap(~variable) +
+  labs(title = "Information effects on POLITICAL ATTITUDES in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
-       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (percentage points)") +
   theme(plot.title = element_text(face="bold")) +
