@@ -43,7 +43,6 @@ m_reduce_pub_spend_cont <- glm(a_reduce_pub_spend ~
                                  d_gender +
                                  d_class +
                                  d_education +
-                                 d_marital_status +
                                  d_income,
                                data = df_all_years, 
                                family = "binomial")
@@ -55,7 +54,6 @@ m_sell_pub_comp_cont <- glm(a_sell_pub_comp ~
                                  d_gender +
                                  d_class +
                                  d_education +
-                                 d_marital_status +
                                  d_income,
                                data = df_all_years, 
                                family = "binomial")
@@ -67,7 +65,6 @@ m_priv_healthcare_cont <- glm(a_priv_healthcare ~
                               d_gender +
                               d_class +
                               d_education +
-                              d_marital_status +
                               d_income,
                             data = df_all_years, 
                             family = "binomial")
@@ -79,7 +76,6 @@ m_fewer_refugees_cont <- glm(a_fewer_refugees ~
                                 d_gender +
                                 d_class +
                                 d_education +
-                                d_marital_status +
                                 d_income,
                               data = df_all_years, 
                               family = "binomial")
@@ -91,7 +87,6 @@ m_law_order_cont <- glm(a_law_order ~
                                d_gender +
                                d_class +
                                d_education +
-                               d_marital_status +
                                d_income,
                              data = df_all_years, 
                              family = "binomial")
@@ -103,7 +98,6 @@ m_gender_equal_cont <- glm(a_gender_equal ~
                           d_gender +
                           d_class +
                           d_education +
-                          d_marital_status +
                           d_income,
                         data = df_all_years, 
                         family = "binomial")
@@ -115,7 +109,6 @@ m_no_nuclear_cont <- glm(a_no_nuclear ~
                            d_gender +
                            d_class +
                            d_education +
-                           d_marital_status +
                            d_income,
                          data = df_all_years, 
                          family = "binomial")
@@ -127,7 +120,6 @@ m_leave_eu_cont <- glm(a_leave_eu ~
                          d_gender +
                          d_class +
                          d_education +
-                         d_marital_status +
                          d_income,
                        data = df_all_years, 
                        family = "binomial")
@@ -139,7 +131,6 @@ m_join_nato_cont <- glm(a_join_nato ~
                           d_gender +
                           d_class +
                           d_education +
-                          d_marital_status +
                           d_income,
                         data = df_all_years, 
                         family = "binomial")
@@ -152,7 +143,6 @@ m_right_party_cont <- glm(right_party ~
                           d_gender +
                           d_class +
                           d_education +
-                          d_marital_status +
                           d_income,
                         data = df_all_years, 
                         family = "binomial")
@@ -164,7 +154,6 @@ m_left_party_cont <- glm(left_party ~
                             d_gender +
                             d_class +
                             d_education +
-                            d_marital_status +
                             d_income,
                           data = df_all_years, 
                           family = "binomial")
@@ -176,7 +165,6 @@ m_no_party_cont <- glm(no_party ~
                            d_gender +
                            d_class +
                            d_education +
-                           d_marital_status +
                            d_income,
                          data = df_all_years, 
                          family = "binomial")
@@ -241,7 +229,6 @@ m_reduce_pub_spend <- glm(a_reduce_pub_spend ~
                             d_gender +
                             d_class +
                             d_education +
-                            d_marital_status +
                             d_income,
                           data = df_all_years, 
                           family = "binomial",
@@ -254,7 +241,6 @@ m_sell_pub_comp  <- glm(a_sell_pub_comp ~
                           d_gender +
                           d_class +
                           d_education +
-                          d_marital_status +
                           d_income,
                         data = df_all_years, 
                         family = "binomial",
@@ -267,7 +253,6 @@ m_priv_healthcare  <- glm(a_priv_healthcare ~
                             d_gender +
                             d_class +
                             d_education +
-                            d_marital_status +
                             d_income,
                           data = df_all_years, 
                           family = "binomial",
@@ -280,7 +265,6 @@ m_fewer_refugees  <- glm(a_fewer_refugees ~
                            d_gender +
                            d_class +
                            d_education +
-                           d_marital_status +
                            d_income,
                          data = df_all_years, 
                          family = "binomial",
@@ -293,7 +277,6 @@ m_law_order  <- glm(a_law_order ~
                       d_gender +
                       d_class +
                       d_education +
-                      d_marital_status +
                       d_income,
                     data = df_all_years, 
                     family = "binomial",
@@ -306,7 +289,6 @@ m_gender_equal  <- glm(a_gender_equal ~
                          d_gender +
                          d_class +
                          d_education +
-                         d_marital_status +
                          d_income,
                        data = df_all_years, 
                        family = "binomial",
@@ -319,7 +301,6 @@ m_no_nuclear  <- glm(a_no_nuclear ~
                        d_gender +
                        d_class +
                        d_education +
-                       d_marital_status +
                        d_income,
                      data = df_all_years, 
                      family = "binomial",
@@ -332,7 +313,6 @@ m_leave_eu  <- glm(a_leave_eu ~
                      d_gender +
                      d_class +
                      d_education +
-                     d_marital_status +
                      d_income,
                    data = df_all_years, 
                    family = "binomial",
@@ -345,7 +325,6 @@ m_join_nato  <- glm(a_join_nato ~
                       d_gender +
                       d_class +
                       d_education +
-                      d_marital_status +
                       d_income,
                     data = df_all_years, 
                     family = "binomial",
@@ -358,7 +337,6 @@ m_right_party  <- glm(right_party ~
                       d_gender +
                       d_class +
                       d_education +
-                      d_marital_status +
                       d_income,
                     data = df_all_years, 
                     family = "binomial",
@@ -371,11 +349,11 @@ m_left_party  <- glm(left_party ~
                         d_gender +
                         d_class +
                         d_education +
-                        d_marital_status +
                         d_income,
                       data = df_all_years, 
                       family = "binomial",
                       weights = prop_score)
+
 m_no_party  <- glm(no_party ~ 
                         knowledge_binary +
                         year:knowledge_binary +
@@ -383,26 +361,25 @@ m_no_party  <- glm(no_party ~
                         d_gender +
                         d_class +
                         d_education +
-                        d_marital_status +
                         d_income,
                       data = df_all_years, 
                       family = "binomial",
                       weights = prop_score)
 
 # look at modelled effect over time
-effect_over_time <- tibble("variable" = (c(rep("a_reduce_pub_spend",5),
-                                          rep("a_sell_pub_comp",5),
-                                          rep("a_priv_healthcare",5),
-                                          rep("a_fewer_refugees",5),
-                                          rep("a_law_order",5),
-                                          rep("a_gender_equal",5),
-                                          rep("a_no_nuclear",5),
-                                          rep("a_leave_eu",5),
-                                          rep("a_join_nato",5),
-                                          rep("right_party",5),
-                                          rep("left_party",5),
-                                          rep("no_party",5))),
-                           "year" = rep(c("1998","2002","2006","2010","2014"),12),
+effect_over_time <- tibble("variable" = (c(rep("a_reduce_pub_spend",6),
+                                          rep("a_sell_pub_comp",6),
+                                          rep("a_priv_healthcare",6),
+                                          rep("a_fewer_refugees",6),
+                                          rep("a_law_order",6),
+                                          rep("a_gender_equal",6),
+                                          rep("a_no_nuclear",6),
+                                          rep("a_leave_eu",6),
+                                          rep("a_join_nato",6),
+                                          rep("right_party",6),
+                                          rep("left_party",6),
+                                          rep("no_party",6))),
+                           "year" = rep(c("1998","2002","2006","2010","2014","2018"),12),
                            "est" = NA,
                            "lwr" = NA,
                            "upr" = NA)
@@ -416,6 +393,7 @@ calc_time_effect <- function(models, df) {
     df[target_rows[3], 3:5] <- confint(glht(models[[i]], linfct = c("knowledge_binary + knowledge_binary:year2006 = 0")))$confint
     df[target_rows[4], 3:5] <- confint(glht(models[[i]], linfct = c("knowledge_binary + knowledge_binary:year2010 = 0")))$confint
     df[target_rows[5], 3:5] <- confint(glht(models[[i]], linfct = c("knowledge_binary + knowledge_binary:year2014 = 0")))$confint
+    df[target_rows[6], 3:5] <- confint(glht(models[[i]], linfct = c("knowledge_binary + knowledge_binary:year2018 = 0")))$confint
   }
   return(df)
 }
@@ -459,7 +437,7 @@ effect_over_time %>%
   facet_wrap(~variable, scales = "free_y") +
   labs(title = "Effects from knowledge in the Swedish electorate over time",
        subtitle = "Effects measure difference in logged odds of agreement of moving from uninformed to informed",
-       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (logged odds)") +
   theme(plot.title = element_text(face="bold")) +
@@ -501,7 +479,7 @@ df_informed %>%
   facet_wrap(~variable, scales = "free_y") +
   labs(title = "Information effects on PARTY PREFERENCE in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
-       caption = "Data: SNES 1998, 2002, 2006, 2010 and 2014",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (percentage points)") +
   theme(plot.title = element_text(face="bold")) +
