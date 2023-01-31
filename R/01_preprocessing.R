@@ -3,6 +3,148 @@ set.seed(100)
 library(tidyverse)
 library(haven)
 
+# 2018 data
+df_snes_2018 <- read_dta("data/kunskap2018.dta")
+
+df_2018_subset <- df_snes_2018 %>% 
+  dplyr::select(q88, # gender
+                q89, # age
+                q97, # education
+                q98, # income
+                q83, # occupation standing in for class
+                pipa, # partisanship,
+                pisa, # party adherence
+                q72b_rf, q72c_rf, # k: party reps for s and m
+                q77a_rf, q77b_rf, q77d_rf, # remaining k variables
+                q65a, # reduce public spending
+                q65e, # sell off public companies
+                q65g, # more private healthcare
+                q65ab, # accept fewer refugees
+                q66e, # focus on law and order
+                q66i, # more gender equality; solidarity and equality
+                q65i, # no nuclear
+                q65ak, # leave EU
+                q65aj, # join NATO
+                vikt_parti) # party choice weight
+
+df_2018_subset <- df_2018_subset %>% 
+  rename(d_gender = q88,
+         d_age = q89,
+         d_education = q97,
+         d_income = q98,
+         d_class = q83,
+         d_partisanship = pipa,
+         d_party_adherence = pisa,
+         k_m_rep = q72c_rf,
+         k_s_rep = q72b_rf,
+         k_nat_insurance = q77a_rf,
+         k_num_mps = q77b_rf,
+         k_spain_eu = q77d_rf,
+         a_reduce_pub_spend = q65a,
+         a_sell_pub_comp = q65e,
+         a_priv_healthcare = q65g,
+         a_fewer_refugees = q65ab,
+         a_law_order = q66e,
+         a_gender_equal = q66i,
+         a_no_nuclear = q65i,
+         a_leave_eu = q65ak,
+         a_join_nato = q65aj,
+         weight = vikt_parti)
+
+df_2018_subset <- df_2018_subset %>% 
+  mutate(d_gender = case_when(d_gender == 1 ~ "female",
+                              d_gender == 2 ~ "male"),
+         d_age = 2018 - d_age,
+         d_age = case_when(d_age >= 18 & d_age <= 30 ~ "18_30",
+                           d_age >= 31 & d_age <= 60 ~ "31_60",
+                           d_age > 60 ~ "61plus"),
+         d_age = factor(d_age, levels = c("18_30", "31_60", "61plus")),
+         d_education = case_when(d_education == 1 ~ "low_edu",
+                                 d_education == 2 ~ "low_edu",
+                                 d_education == 3 ~ "middle_edu",
+                                 d_education == 4 ~ "middle_edu",
+                                 d_education == 6 ~ "middle_edu",
+                                 d_education == 7 ~ "high_edu",
+                                 d_education == 8 ~ "high_edu",
+                                 TRUE ~ NA_character_),
+         d_education = factor(d_education, levels = c("low_edu", "middle_edu", "high_edu")),
+         d_income = case_when(d_income == 1 | d_income == 2 ~ "inc_very_low",
+                              d_income == 3 | d_income == 4 ~ "inc_fairly_low",
+                              d_income == 5 | d_income == 6  | d_income == 7 ~ "inc_medium",
+                              d_income == 8 | d_income == 9 ~ "inc_fairly_high",
+                              d_income == 10 | d_income == 11  | d_income == 12 ~ "inc_very_high"),
+         d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
+         d_class = case_when(d_class == 4 | d_class == 5 | d_class == 6 | d_class == 7 ~ "working_class",
+                             d_class == 1 | d_class == 2 | d_class == 3 | d_class == 7 | d_class == 8 | d_class == 9 | d_class == 10 ~ "middle_class",
+                             TRUE ~ NA_character_),
+         d_partisanship = as_factor(d_partisanship), # assuming same coding as in 2014
+         d_partisanship = case_when(d_partisanship == 1 ~ "Vänsterpartiet",
+                                    d_partisanship == 2 ~ "Socialdemokraterna",
+                                    d_partisanship == 3 ~ "Centerpartiet",
+                                    d_partisanship == 4 ~ "Folkpartiet",
+                                    d_partisanship == 5 ~ "Moderaterna",
+                                    d_partisanship == 6 ~ "Kristdemokraterna",
+                                    d_partisanship == 7 ~ "Miljöpartiet",
+                                    d_partisanship == 8 ~ "Sverigedemokraterna",
+                                    d_partisanship == 9 ~ "Feministiskt initiativ",
+                                    d_partisanship == 10 ~ "Annat parti"),
+         d_partisanship = case_when(d_party_adherence == 4 ~ "inget_parti",
+                                    TRUE ~ d_partisanship),
+         k_m_rep = case_when(k_m_rep == 1 ~ 1,
+                             k_m_rep == 0 ~ 0,
+                             k_m_rep == 8 ~ 0,
+                             k_m_rep == 9 ~ 0,
+                             TRUE ~ NA_real_),
+         k_s_rep = case_when(k_s_rep == 1 ~ 1,
+                             k_s_rep == 0 ~ 0,
+                             k_s_rep == 8 ~ 0,
+                             k_s_rep == 9 ~ 0,
+                             TRUE ~ NA_real_),
+         k_nat_insurance = case_when(k_nat_insurance == 1 ~ 1,
+                                     k_nat_insurance == 0 ~ 0,
+                                     k_nat_insurance == 8 ~ 0,
+                                     k_nat_insurance == 9 ~ 0,
+                                     TRUE ~ NA_real_),
+         k_num_mps = case_when(k_num_mps == 1 ~ 1,
+                               k_num_mps == 0 ~ 0,
+                               k_num_mps == 8 ~ 0,
+                               k_num_mps == 9 ~ 0,
+                               TRUE ~ NA_real_),
+         k_spain_eu = case_when(k_spain_eu == 1 ~ 1,
+                                k_spain_eu == 0 ~ 0,
+                                k_spain_eu == 8 ~ 0,
+                                k_spain_eu == 9 ~ 0,
+                                TRUE ~ NA_real_),
+         a_reduce_pub_spend = case_when(a_reduce_pub_spend < 3 ~ 1, # good proposal
+                                        a_reduce_pub_spend > 2 ~ 0,
+                                        TRUE ~ NA_real_),
+         a_sell_pub_comp = case_when(a_sell_pub_comp < 3 ~ 1, # good proposal
+                                     a_sell_pub_comp > 2 ~ 0,
+                                     TRUE ~ NA_real_),
+         a_priv_healthcare = case_when(a_priv_healthcare < 3 ~ 1, # good proposal
+                                       a_priv_healthcare > 2 ~ 0,
+                                       TRUE ~ NA_real_),
+         a_fewer_refugees = case_when(a_fewer_refugees < 3 ~ 1, # good proposal
+                                      a_fewer_refugees > 2 ~ 0,
+                                      TRUE ~ NA_real_),
+         a_law_order = case_when(a_law_order > 5 ~ 1, # good proposal
+                                 a_law_order < 6 ~ 0,
+                                 TRUE ~ NA_real_),
+         a_gender_equal = case_when(a_gender_equal > 5 ~ 1, # good proposal
+                                    a_gender_equal < 6 ~ 0,
+                                    TRUE ~ NA_real_),
+         a_no_nuclear = case_when(a_no_nuclear < 3 ~ 1, # good proposal
+                                  a_no_nuclear > 2 ~ 0,
+                                  TRUE ~ NA_real_),
+         a_leave_eu = case_when(a_leave_eu < 3 ~ 1, # good proposal
+                                a_leave_eu > 2 ~ 0,
+                                TRUE ~ NA_real_),
+         a_join_nato = case_when(a_join_nato < 3 ~ 1, # good proposal
+                                 a_join_nato > 2 ~ 0,
+                                 TRUE ~ NA_real_),
+         weight = ifelse(is.na(weight), 1, weight)) %>% # assuming NA values to be 1
+  select(-d_party_adherence)
+
 # 2014 data
 df_snes_2014 <- read_sav("data/VU2014SND.sav")
 
@@ -13,7 +155,6 @@ df_2014_subset <- df_snes_2014 %>%
                 v7031, # age
                 v7033, # education
                 v7051, # income
-                f78, # marital status
                 v7037, # class
                 v7024, # partisanship,
                 v7025, # party adherence
@@ -35,7 +176,6 @@ df_2014_subset <- df_2014_subset %>%
          d_age = v7031,
          d_education = v7033,
          d_income = v7051,
-         d_marital_status = f78,
          d_class = v7037,
          d_partisanship = v7024,
          d_party_adherence = v7025,
@@ -74,11 +214,6 @@ df_2014_subset <- df_2014_subset %>%
                               d_income == "Ganska hög inkomst" ~ "inc_fairly_high",
                               d_income == "Mycket hög inkomst" ~ "inc_very_high"),
          d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
-         d_marital_status = as_factor(d_marital_status),
-         d_marital_status = case_when(d_marital_status == "Ensamstående" ~ "single",
-                                      d_marital_status == "Sambo" ~ "married",
-                                      d_marital_status == "Gift/partnerskap" ~ "married",
-                                      d_marital_status == "Änka/änkling" ~ "widow"),
          d_class = case_when(d_class == 1 ~ "working_class",
                              d_class == 2 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
@@ -153,7 +288,6 @@ df_2010_subset <- df_snes_2010 %>%
                 VU10_V7031, # age
                 VU10_V7033, # education
                 VU10_V7045, # income
-                VU10_S7, # marital status
                 VU10_V7043, # class
                 VU10_V7022, # partisanship,
                 VU10_V7023, # party adherence
@@ -175,7 +309,6 @@ df_2010_subset <- df_2010_subset %>%
          d_age = VU10_V7031,
          d_education = VU10_V7033,
          d_income = VU10_V7045,
-         d_marital_status = VU10_S7,
          d_class = VU10_V7043,
          d_partisanship = VU10_V7022,
          d_party_adherence = VU10_V7023,
@@ -214,12 +347,6 @@ df_2010_subset <- df_2010_subset %>%
                               d_income == "Ganska hög" ~ "inc_fairly_high",
                               d_income == "Mycket hög" ~ "inc_very_high"),
          d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
-         d_marital_status = as_factor(d_marital_status),
-         d_marital_status = case_when(d_marital_status == "Ogift" ~ "single",
-                                      d_marital_status == "Skild" ~ "single",
-                                      d_marital_status == "SP" ~ "single",
-                                      d_marital_status == "Gift" ~ "married",
-                                      d_marital_status == "Änka/änkeman" ~ "widow"),
          d_class = case_when(d_class == 1 ~ "working_class",
                              d_class == 5 ~ "middle_class"),
          d_partisanship = as_factor(d_partisanship),
@@ -263,7 +390,6 @@ df_2006_subset <- df_snes_2006 %>%
                 age3, # age
                 utbny, # education
                 ink5, # income
-                c9, # marital status
                 v782, # class (subjective)
                 pipa, # partisanship,
                 pisa, # party adherence
@@ -285,7 +411,6 @@ df_2006_subset <- df_2006_subset %>%
          d_age = age3,
          d_education = utbny,
          d_income = ink5,
-         d_marital_status = c9,
          d_class = v782,
          d_partisanship = pipa,
          d_party_adherence = pisa,
@@ -324,12 +449,6 @@ df_2006_subset <- df_2006_subset %>%
                               d_income == 4 ~ "inc_fairly_high",
                               d_income == 5 ~ "inc_very_high"),
          d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
-         d_marital_status = as_factor(d_marital_status),
-         d_marital_status = case_when(d_marital_status == "OG" ~ "single",
-                                      d_marital_status == "S" ~ "single",
-                                      d_marital_status == "SP" ~ "single",
-                                      d_marital_status == "G" ~ "married",
-                                      d_marital_status == "Ä" ~ "widow"),
          d_class = case_when(d_class == 1 ~ "working_class",
                              d_class == 2 ~ "middle_class",
                              d_class == 3 ~ "middle_class",
@@ -421,7 +540,6 @@ df_2002_subset <- df_snes_2002 %>%
                 V584, # age
                 V592, # education
                 V599, # income
-                V587, # marital status
                 V512, # class (subjective)
                 V236, # partisanship,
                 V235, # party adherence
@@ -443,7 +561,6 @@ df_2002_subset <- df_2002_subset %>%
          d_age = V584,
          d_education = V592,
          d_income = V599,
-         d_marital_status = V587,
          d_class = V512,
          d_partisanship = V236,
          d_party_adherence = V235,
@@ -482,12 +599,6 @@ df_2002_subset <- df_2002_subset %>%
                               d_income == "High income (66-85 percentile)" ~ "inc_fairly_high",
                               d_income == "Very high income (15% highest incomes)" ~ "inc_very_high"),
          d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
-         d_marital_status = as_factor(d_marital_status),
-         d_marital_status = case_when(d_marital_status == "Not married" ~ "single",
-                                      d_marital_status == "Married" ~ "married",
-                                      d_marital_status == "Divorced" ~ "single",
-                                      d_marital_status == "Widow/widower" ~ "widow",
-                                      d_marital_status == "Registred partner" ~ "married"),
          d_class = case_when(d_class == 1 ~ "working_class",
                              d_class == 2 ~ "middle_class",
                              d_class == 3 ~ "middle_class",
@@ -563,7 +674,6 @@ df_1998_subset <- df_snes_1998 %>%
                 v463, # age
                 v475, # education
                 v485, # income
-                v486, # marital status
                 v407, # class
                 v187, # partisanship,
                 v186, # party adherence
@@ -585,7 +695,6 @@ df_1998_subset <- df_1998_subset %>%
          d_age = v463,
          d_education = v475,
          d_income = v485,
-         d_marital_status = v486,
          d_class = v407,
          d_partisanship = v187,
          d_party_adherence = v186,
@@ -624,15 +733,6 @@ df_1998_subset <- df_1998_subset %>%
                               d_income == "190 000 - 249 999 SEK" ~ "inc_fairly_high",
                               d_income == "250 000 SEK -" ~ "inc_very_high"),
          d_income = factor(d_income, levels = c("inc_very_low", "inc_fairly_low", "inc_medium", "inc_fairly_high", "inc_very_high")),
-         d_marital_status = as_factor(d_marital_status),
-         d_marital_status = case_when(d_marital_status == "Not married" ~ "single",
-                                      d_marital_status == "Married man" ~ "married",
-                                      d_marital_status == "Married woman, not living together with her husband" ~ "married",
-                                      d_marital_status == "Divorced" ~ "single",
-                                      d_marital_status == "Widow/widower" ~ "widow",
-                                      d_marital_status == "Married woman, living together with her husband" ~ "married",
-                                      d_marital_status == "Child under the age of 18" ~ "single",
-                                      d_marital_status == "Foster child" ~ "married"),
          d_class = case_when(d_class == 1 ~ "working_class",
                              d_class == 2 ~ "middle_class",
                              d_class == 3 ~ "middle_class",
@@ -704,18 +804,19 @@ df_2002_subset$year <- "2002"
 df_2006_subset$year <- "2006"
 df_2010_subset$year <- "2010"
 df_2014_subset$year <- "2014"
+df_2018_subset$year <- "2018"
 
 df_all_years <- rbind(df_1998_subset,
                       df_2002_subset,
                       df_2006_subset,
                       df_2010_subset,
-                      df_2014_subset)
+                      df_2014_subset,
+                      df_2018_subset)
 
 table(df_all_years$d_gender)
 table(df_all_years$d_age)
 table(df_all_years$d_education)
 table(df_all_years$d_income)
-table(df_all_years$d_marital_status)
 table(df_all_years$d_class)
 table(df_all_years$d_partisanship)
 
