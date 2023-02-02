@@ -3,7 +3,17 @@ set.seed(100)
 library(tidyverse)
 library(informationeffects)
 
+lapply(df_all_years, class)
+
 df_all_years <- readRDS("data/df_all_years_imputed.rds")
+
+# convert from impute to numeric
+df_all_years <- df_all_years %>% 
+  mutate(k_m_rep = as.numeric(k_m_rep),
+         k_s_rep = as.numeric(k_s_rep),
+         k_nat_insurance = as.numeric(k_nat_insurance),
+         k_num_mps = as.numeric(k_num_mps),
+         k_spain_eu = as.numeric(k_spain_eu))
 
 # does knowledge correlate with expected patterns in gender, education, age, and income
 df_all_years <- df_all_years %>% 
