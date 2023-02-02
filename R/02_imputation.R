@@ -4,9 +4,38 @@ library(tidyverse)
 library(visdat)
 library(Hmisc)
 
-df_all_years2 <- readRDS("data/df_all_years.rds")
+df_all_years <- readRDS("data/df_all_years.rds")
 
-vis_miss(df_all_years)
+df_all_years %>% 
+  vis_miss()
+
+# remove rows with all NA
+df_all_years <- df_all_years[rowSums(is.na(df_all_years[,1:20]))!=20,]
+
+# look at missing by year
+df_all_years %>% 
+  filter(year == 1998) %>% 
+  vis_miss()
+
+df_all_years %>% 
+  filter(year == 2002) %>% 
+  vis_miss()
+
+df_all_years %>% 
+  filter(year == 2006) %>% 
+  vis_miss()
+
+df_all_years %>% 
+  filter(year == 2010) %>% 
+  vis_miss()
+
+df_all_years %>% 
+  filter(year == 2014) %>% 
+  vis_miss()
+
+df_all_years %>% 
+  filter(year == 2018) %>% 
+  vis_miss()
 
 impute_arg <- aregImpute(~ d_gender +
                            d_age +
