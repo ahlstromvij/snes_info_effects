@@ -25,7 +25,7 @@ df_all_years <- df_all_years %>%
                                         TRUE ~ 0),
          vansterpartiet = case_when(d_partisanship == "vänsterpartiet" ~ 1,
                                          TRUE ~ 0),
-         inget_parti = case_when(d_partisanship == "inget_parti" ~ 1,
+         rostade_inte = case_when(d_partisanship == "rostade_inte" ~ 1,
                               TRUE ~ 0))
 
 
@@ -152,7 +152,7 @@ m_folkpartiet_cont <- glm(folkpartiet ~
                           data = df_all_years, 
                           family = "binomial")
 
-m_inget_parti_cont <- glm(inget_parti ~ 
+m_rostade_inte_cont <- glm(rostade_inte ~ 
                            knowledge +
                            year:knowledge +
                            d_age +
@@ -243,7 +243,7 @@ pred_join_nato <- ggpredict(m_join_nato_cont, c("year","knowledge"))
 # party preference
 pred_centerpartiet <- ggpredict(m_centerpartiet_cont, c("year","knowledge"))
 pred_folkpartiet <- ggpredict(m_folkpartiet_cont, c("year","knowledge"))
-pred_inget_parti <- ggpredict(m_inget_parti_cont, c("year","knowledge"))
+pred_rostade_inte <- ggpredict(m_rostade_inte_cont, c("year","knowledge"))
 pred_kristdemokraterna <- ggpredict(m_kristdemokraterna_cont, c("year","knowledge"))
 pred_moderaterna <- ggpredict(m_moderaterna_cont, c("year","knowledge"))
 pred_miljopartiet <- ggpredict(m_miljopartiet_cont, c("year","knowledge"))
@@ -263,7 +263,7 @@ pred_join_nato$var <- "join_nato"
 
 pred_centerpartiet$var <- "centerpartiet"
 pred_folkpartiet$var <- "folkpartiet"
-pred_inget_parti$var <- "inget_parti"
+pred_rostade_inte$var <- "rostade_inte"
 pred_kristdemokraterna$var <- "kristdemokraterna"
 pred_moderaterna$var <- "moderaterna"
 pred_miljopartiet$var <- "miljopartiet"
@@ -282,7 +282,7 @@ all_preds <- rbind(pred_reduce_pub_spend,
                    pred_join_nato,
                    pred_centerpartiet,
                    pred_folkpartiet,
-                   pred_inget_parti,
+                   pred_rostade_inte,
                    pred_kristdemokraterna,
                    pred_moderaterna,
                    pred_miljopartiet,
@@ -293,9 +293,9 @@ all_preds <- rbind(pred_reduce_pub_spend,
 # has the relationship between knowledge and the variable in question been
 # constant over the years?
 
-all_parties <- c("folkpartiet","centerpartiet","inget_parti","kristdemokraterna",
+all_parties <- c("folkpartiet","centerpartiet","rostade_inte","kristdemokraterna",
                  "moderaterna","miljopartiet","socialdemokraterna","sverigedemokraterna",
-                 "vansterpartiet", "Folkpartiet","Centerpartiet","Inget parti","Kristdemokraterna",
+                 "vansterpartiet", "Folkpartiet","Centerpartiet","Röstade inte","Kristdemokraterna",
                  "Moderaterna","Miljöpartiet","Socialdemokraterna","Sverigedemokraterna",
                  "Vänsterpartiet")
 # party preferences
@@ -451,7 +451,7 @@ m_folkpartiet  <- glm(folkpartiet ~
                       family = "binomial",
                       weights = prop_score)
 
-m_inget_parti  <- glm(inget_parti ~ 
+m_rostade_inte  <- glm(rostade_inte ~ 
                         knowledge_binary +
                         year:knowledge_binary +
                         d_age +
@@ -547,7 +547,7 @@ effect_over_time <- tibble("variable" = (c(rep("a_reduce_pub_spend",6),
                                           rep("a_join_nato",6),
                                           rep("centerpartiet",6),
                                           rep("folkpartiet",6),
-                                          rep("inget_parti",6),
+                                          rep("rostade_inte",6),
                                           rep("kristdemokraterna",6),
                                           rep("miljopartiet",6),
                                           rep("moderaterna",6),
@@ -584,7 +584,7 @@ effect_over_time <- calc_time_effect(models = list(m_reduce_pub_spend,
                                                    m_join_nato,
                                                    m_centerpartiet,
                                                    m_folkpartiet,
-                                                   m_inget_parti,
+                                                   m_rostade_inte,
                                                    m_kristdemokraterna,
                                                    m_miljopartiet,
                                                    m_moderaterna,
@@ -604,18 +604,15 @@ effect_over_time <- effect_over_time %>%
                            "a_no_nuclear" = "Abolish nuclear power",
                            "a_leave_eu" = "Leave the EU",
                            "a_join_nato" = "Join NATO",
-                           "right_party" = "Supporting right parties",
-                           "left_party" = "Supporting left parties",
-                           "no_party" = "Supporting no party",
                            "centerpartiet" = "Centerpartiet",
                            "folkpartiet" = "Folkpartiet",
-                           "inget_parti" = "Inget parti",
                            "kristdemokraterna" = "Kristdemokraterna",
                            "miljopartiet" = "Miljöpartiet",
                            "moderaterna" = "Moderaterna",
                            "socialdemokraterna" = "Socialdemokraterna",
                            "sverigedemokraterna" = "Sverigedemokraterna",
-                           "vansterpartiet" = "Vänsterpartiet"))
+                           "vansterpartiet" = "Vänsterpartiet",
+                           "rostade_inte" = "Röstade inte"))
 
 png(file="plots/knowledge_effects_party.png", width = 12, height = 8, units = 'in', res = 300)
 effect_over_time %>% 
@@ -669,7 +666,7 @@ df_informed$a_join_nato_informed <- predict(m_join_nato, newdata = df_informed, 
 
 df_informed$centerpartiet_informed <- predict(m_centerpartiet, newdata = df_informed, type = "response")
 df_informed$folkpartiet_informed <- predict(m_folkpartiet, newdata = df_informed, type = "response")
-df_informed$inget_parti_informed <- predict(m_inget_parti, newdata = df_informed, type = "response")
+df_informed$rostade_inte_informed <- predict(m_rostade_inte, newdata = df_informed, type = "response")
 df_informed$kristdemokraterna_informed <- predict(m_kristdemokraterna, newdata = df_informed, type = "response")
 df_informed$miljopartiet_informed <- predict(m_miljopartiet, newdata = df_informed, type = "response")
 df_informed$moderaterna_informed <- predict(m_moderaterna, newdata = df_informed, type = "response")
@@ -688,7 +685,7 @@ df_informed %>%
             "Socialdemokraterna" = mean(socialdemokraterna_informed) - mean(socialdemokraterna),
             "Sverigedemokraterna" = mean(sverigedemokraterna_informed) - mean(sverigedemokraterna),
             "Vänsterpartiet" = mean(vansterpartiet_informed) - mean(vansterpartiet),
-            "Inget parti" = mean(inget_parti_informed) - mean(inget_parti))  %>% 
+            "Röstade inte" = mean(rostade_inte_informed) - mean(rostade_inte))  %>% 
   pivot_longer(cols = -year,
                names_to = "variable",
                values_to = "difference")  %>% 
@@ -699,7 +696,7 @@ df_informed %>%
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
   facet_wrap(~variable) +
-  labs(title = "Information effects on PARTY PREFERENCE in the Swedish electorate over time",
+  labs(title = "Information effects on PARTY CHOICE in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
