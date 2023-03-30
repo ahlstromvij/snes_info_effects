@@ -7,10 +7,29 @@ library(Hmisc)
 df_all_years <- readRDS("data/df_all_years.rds")
 
 df_all_years %>% 
-  vis_miss()
+  group_by(year) %>% 
+  summarise(n = length(year))
 
-# remove rows with all NA
-df_all_years <- df_all_years[rowSums(is.na(df_all_years[,1:20]))!=20,]
+sum(is.na(df_all_years[,1:22])) / (dim(df_all_years[,1:22])[1] * dim(df_all_years[,1:22])[2])
+# 58% missing values
+
+# how many rows have NA on all knowledge items?
+sum(rowSums(is.na(df_all_years[,7:13]))==7) # 23058
+
+# how many rows have NA on all attitude items + party choice?
+sum(rowSums(is.na(df_all_years[,c(6,14:22)]))==10) # 17719
+
+# remove rows with all NA on knowledge items
+df_all_years <- df_all_years[rowSums(is.na(df_all_years[,7:13]))!=7,]
+
+# remove remaining rows with all NA on attitude items + party choice
+df_all_years <- df_all_years[rowSums(is.na(df_all_years[,c(6,14:22)]))!=10,]
+
+sum(is.na(df_all_years[,1:22])) / (dim(df_all_years[,1:22])[1] * dim(df_all_years[,1:22])[2])
+# 58% missing values
+
+df_all_years %>% 
+  vis_miss()
 
 # look at missing by year
 df_all_years %>% 
@@ -45,6 +64,8 @@ impute_arg <- aregImpute(~ d_gender +
                            d_partisanship +
                            k_m_rep +
                            k_s_rep +
+                           k_c_rep +
+                           k_v_rep +
                            k_nat_insurance +
                            k_num_mps +
                            k_spain_eu +
