@@ -614,6 +614,10 @@ effect_over_time <- effect_over_time %>%
                            "vansterpartiet" = "Vänsterpartiet",
                            "rostade_inte" = "Röstade inte"))
 
+table(df_all_years$d_partisanship, df_all_years$year) # remove 1998 - 2006 for SD
+effect_over_time <- effect_over_time %>% 
+  filter(., !(variable == "Sverigedemokraterna" & (year == 1998 | year == 2002 | year == 2006)))
+
 png(file="plots/knowledge_effects_party.png", width = 12, height = 8, units = 'in', res = 300)
 effect_over_time %>% 
   filter(variable %in% all_parties) %>% 
@@ -674,6 +678,46 @@ df_informed$socialdemokraterna_informed <- predict(m_socialdemokraterna, newdata
 df_informed$sverigedemokraterna_informed <- predict(m_sverigedemokraterna, newdata = df_informed, type = "response")
 df_informed$vansterpartiet_informed <- predict(m_vansterpartiet, newdata = df_informed, type = "response")
 
+df_informed %>% 
+  mutate(diff = centerpartiet_informed - centerpartiet) %>% 
+  aov(diff ~ year, data = .) %>% 
+  summary()
+
+df_informed %>% 
+  mutate(diff = folkpartiet_informed - folkpartiet) %>% 
+  aov(diff ~ year, data = .) %>% 
+  summary()
+
+sig_diff <- function(inf_var, act_var, data) {
+  diff = data[inf_var] - data[act_var]
+  year = data$year
+  df <- cbind(diff, year)
+  m <- aov(df[[1]] ~ df[[2]])
+  return(summary(m)[[1]]$`Pr(>F)`[1])
+}
+
+sig_diffs_party <- tibble(
+  variable = c("Centerpartiet",
+               "Folkpartiet",
+               "Kristdemokraterna",
+               "Miljöpartiet",
+               "Moderaterna",
+               "Socialdemokraterna",
+               "Sverigedemokraterna",
+               "Vänsterpartiet",
+               "Röstade inte"),
+  p_val = c(sig_diff("centerpartiet_informed", "centerpartiet", df_informed),
+            sig_diff("folkpartiet_informed", "folkpartiet", df_informed),
+            sig_diff("centerpartiet_informed", "centerpartiet", df_informed),
+            sig_diff("miljopartiet_informed", "miljopartiet", df_informed),
+            sig_diff("moderaterna_informed", "moderaterna", df_informed),
+            sig_diff("socialdemokraterna_informed", "socialdemokraterna", df_informed),
+            sig_diff("sverigedemokraterna_informed", "sverigedemokraterna", df_informed),
+            sig_diff("vansterpartiet_informed", "vansterpartiet", df_informed),
+            sig_diff("rostade_inte_informed", "rostade_inte", df_informed))
+) %>% 
+  mutate(p_val = round(p_val, 4))
+
 png(file="plots/info_effect_party.png", width = 12, height =8, units = 'in', res = 300)
 df_informed %>% 
   group_by(year) %>% 
@@ -695,15 +739,49 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable) +
+  geom_text(aes(x=1, y=5.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_party, hjust = 0) +
   labs(title = "Information effects on PARTY CHOICE in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (percentage points)") +
   theme(plot.title = element_text(face="bold")) +
-  theme(legend.position="none")
+  theme(legend.position="none") +
+  facet_wrap(~variable)
 dev.off()
+
+df_informed <- df_informed %>% 
+  mutate(a_reduce_pub_spend = as.numeric(a_reduce_pub_spend),
+         a_sell_pub_comp = as.numeric(a_sell_pub_comp),
+         a_priv_healthcare = as.numeric(a_priv_healthcare),
+         a_fewer_refugees = as.numeric(a_fewer_refugees),
+         a_law_order = as.numeric(a_law_order),
+         a_gender_equal = as.numeric(a_gender_equal),
+         a_no_nuclear = as.numeric(a_no_nuclear),
+         a_leave_eu = as.numeric(a_leave_eu),
+         a_join_nato = as.numeric(a_join_nato))
+
+sig_diffs_attitude <- tibble(
+  variable = c("Reduce public sector",
+               "Privatise state-owned businesses",
+               "Increase private health care",
+               "Accept fewer refugees",
+               "More law and order",
+               "More gender equality",
+               "Abolish nuclear power",
+               "Leave the EU",
+               "Join NATO"),
+  p_val = c(sig_diff("a_reduce_pub_spend_informed", "a_reduce_pub_spend", df_informed),
+            sig_diff("a_sell_pub_comp_informed", "a_sell_pub_comp", df_informed),
+            sig_diff("a_priv_healthcare_informed", "a_priv_healthcare", df_informed),
+            sig_diff("a_fewer_refugees_informed", "a_fewer_refugees", df_informed),
+            sig_diff("a_law_order_informed", "a_law_order", df_informed),
+            sig_diff("a_gender_equal_informed", "a_gender_equal", df_informed),
+            sig_diff("a_no_nuclear_informed", "a_no_nuclear", df_informed),
+            sig_diff("a_leave_eu_informed", "a_leave_eu", df_informed),
+            sig_diff("a_join_nato_informed", "a_join_nato", df_informed))
+) %>% 
+  mutate(p_val = round(p_val, 4))
 
 png(file="plots/info_effect_attitudes.png", width = 12, height = 8, units = 'in', res = 300)
 df_informed %>% 
@@ -726,13 +804,14 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  facet_wrap(~variable) +
+  geom_text(aes(x=1, y=3.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_attitude, hjust = 0) +
   labs(title = "Information effects on POLITICAL ATTITUDES in the Swedish electorate over time",
        subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (percentage points)") +
   theme(plot.title = element_text(face="bold")) +
-  theme(legend.position="none")
+  theme(legend.position="none") +
+  facet_wrap(~variable)
 dev.off()
 
