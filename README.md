@@ -1,1 +1,1 @@
-# snes_info_effects
+# Information effects in the Swedish electorate: Preliminary analysis (1998-2018)
