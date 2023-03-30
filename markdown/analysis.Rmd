@@ -1,0 +1,1137 @@
+---
+title: |
+  | Information effects in the Swedish electorate: 
+  | Preliminary analysis (1998-2018)
+author: "Kristoffer Ahlstrom-Vij"
+date: "2023-02-22"
+output:
+  pdf_document:
+    number_sections: true
+    fig_caption: true
+  html_document:
+    df_print: paged
+    number_sections: true
+bibliography: refs.bib
+
+---
+
+```{r setup, include=FALSE}
+set.seed(100)
+
+# read in data
+library(tidyverse)
+library(table1)
+library(kableExtra)
+library(informationeffects)
+library(polycor)
+library(psych)
+library(lavaan)
+library(ggpubr)
+library(ggeffects)
+library(multcomp)
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(fig.pos = 'H') # Places figures in text
+knitr::opts_chunk$set(fig.align="center") # Centers figures
+knitr::opts_chunk$set(out.width = '80%', dpi=300) # Figure resolution and size
+knitr::opts_chunk$set(fig.env="figure") # Latex figure environment
+
+df_preprocessed <- readRDS("../data/df_all_years.rds")
+df_imputed <- readRDS("../data/df_all_years_imputed.rds")
+df_all_years <- readRDS("../data/df_all_years_scales.rds")
+
+# convert from impute to numeric
+df_all_years <- df_all_years %>% 
+  mutate(k_m_rep = as.numeric(k_m_rep),
+         k_s_rep = as.numeric(k_s_rep),
+         k_c_rep = as.numeric(k_c_rep),
+         k_v_rep = as.numeric(k_v_rep),
+         k_nat_insurance = as.numeric(k_nat_insurance),
+         k_num_mps = as.numeric(k_num_mps),
+         k_spain_eu = as.numeric(k_spain_eu))
+```
+
+# Introduction
+
+What difference does knowledge make to political attitudes or political behaviors? One established way of quantifying such differences is through so-called information effects [@althaus2003; @bartels1996], i.e., estimated differences between actual patterns of attitudes or choices and the patterns we likely would see, had people been more (or fully) informed. The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example, @ahlstromvij2020-moddemo models an informed EU referendum in the UK, and sees the proportion of 'Remain' swing from a minority to a majority. @blaisetal2009 simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. @oscarsson2007 simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them. 
+
+Information effects modeling can also be used to look at the influence of knowledge on political opinion over time. For example, @ahlstromvij-posttruth uses ANES data to evaluate the idea that we have entered a "post-truth era", by arguing that, if we have, we should expect to see decreasing information effects on central political issues over time. That is, we should expect to see knowledge making less of a difference to what we want or do in the political realm over time. This turns out to be the case: Ahlstrom-Vij shows that, at least in a US context, we see a decrease in information effects on party preferences as well as on key, political issues -- immigration, same-sex adoption, and gun laws, in particular -- in the period of 2004 to 2016. This offers some novel, empirical evidence for the "post-truth" narrative.
+
+The following analysis is a first stab at an attempt to conduct a similar investigation into the Swedish electorate. In particular, have information effects in the Swedish electorate remained constant over time? If not, how have they changed over the years, and what does this tell us about the condition and implications of political knowledge in Sweden?
+
+# Variables and preprocessing
+
+The analysis makes use of SNES data from 1998, 2002, 2006, 2010, 2014, and 2018. In order to create a cumulative data set, tracking responses to the same items over time, the following demographic/socioeconomic variables were extracted from each data set:
+
+-   Gender (binary)
+-   Age (3 categories: 18-30, 31-60, 61+)
+-   Education (3 categories: Low, Middle, High)
+-   Income (5 categories: Very low, Fairly low, Medium, Fairly high, Very high)
+-   Class (2 categories: Working class, Middle class)
+
+The following variables occurred in each data set, and were extracted as potential dependent variables:
+
+-   Party choice in last election (specific categories vary)
+-   Bra/dåligt förslag: minska den offentliga sektorn (5 point response scale)
+-   Bra/dåligt förslag: sälja statliga företag till privata köpare (5 point response scale)
+-   Bra/dåligt förslag: bedriva mer av sjukvården i privat regi (5 point response scale)
+-   Bra/dåligt förslag: ta emot färre flyktingar i Sverige (5 point response scale)
+-   Bra/dåligt förslag: Sverige bör på lång sikt avveckla kärnkraften (5 point response scale)
+-   Bra/dåligt förslag: Sverige bör utträda ur EU (5 point response scale)
+-   Bra/dåligt förslag: Sverige bör söka medlemskap i NATO (5 point response scale)
+-   Bra/dåligt förslag: satsa på ett samhälle med mer lag och ordning? (5 point response scale)
+-   Bra/dåligt förslag: satsa på ett samhälle med mer jämställdhet mellan män och kvinnor? (5 point response scale; note: reformulated in 2018 data)
+
+With the exception of the party choice variable, these were all recoded as binary variables, such that a response of 1 or 2 on the 5 point scale represented support for the proposal, and opposition otherwise.
+
+Finally, each data set contained a number of knowledge items. One type concerned the respondent's ability to identify the party of a named individual (e.g., "Här är en lista med namn på olika personer. Kan du tala om vilket parti som var och en av dem tillhör?"). Representatives of four of the main parties occurred in each data set, i.e., S, M, C, and V, and where therefore extracted as four separate knowledge items (True/False) Additionally, the following three items could also be found in each data set, for a total of seven knowledge items:
+
+-   Sjukersättningen från försäkringskassan är idag 90 procent av lönen från den första sjukdagen (True/False)
+-   Sveriges riksdag har 349 ledamöter (True/False)
+-   Spanien är medlem i EU (True/False)
+
+# Sample sizes and missing data
+
+The sample size for each year was as follows, for a total of `r dim(df_preprocessed)[1]` observations:
+
+```{r echo=FALSE}
+df_preprocessed %>% 
+  group_by(year) %>% 
+  summarise(n = length(year))
+```
+
+There were a fairly large number of missing variable values. For the combined data set, `r round((sum(is.na(df_preprocessed[,1:22])) / (dim(df_preprocessed[,1:22])[1] * dim(df_preprocessed[,1:22])[2])) * 100,0)`% of cells had missing values.
+
+`r sum(rowSums(is.na(df_preprocessed[,7:13]))==7)` of observations had missing values across all knowledge variables. As imputation seemed ambitious under these circumstances, given the scale of missing values, these were removed.
+
+`r sum(rowSums(is.na(df_preprocessed[,c(6,14:22)]))==10)` observations had missing values across all attitudinal and party choice variables, many of which overlapped with those missing on the knowledge variables. These were also removed.
+
+This left a total sample of `r dim(df_imputed)[1]` with 8.3% missing values. These missing values were then imputed using multiple imputation via R's `Hmisc` package.
+
+# Distribution of values across variables
+
+Tables 1-3 give the distribution of respondents across demographic, party choice, and attitudinal variables.
+
+```{r echo=FALSE}
+demo_tab <- table1(~ d_gender + d_age + d_education + d_income + d_class | year, data=df_all_years)
+demo_tab_kable <- kable(as.data.frame(demo_tab), booktabs=TRUE, caption = "Demographic variables")
+kable_styling(demo_tab_kable, latex_options = "scale_down")
+```
+
+```{r echo=FALSE}
+party_tab <- table1(~ d_partisanship | year, data=df_all_years)
+party_tab_kable <- kable(as.data.frame(party_tab), booktabs=TRUE, caption = "Party choice variable")
+kable_styling(party_tab_kable, latex_options = "scale_down")
+```
+
+```{r echo=FALSE}
+attitude_tab <- table1(~ a_sell_pub_comp + a_priv_healthcare + a_fewer_refugees + a_law_order + a_gender_equal + a_no_nuclear + a_leave_eu + a_join_nato | year, data=df_all_years)
+attitude_tab_kable <- kable(as.data.frame(attitude_tab), booktabs=TRUE, caption = "Attitudinal variables")
+kable_styling(attitude_tab_kable, latex_options = "scale_down")
+```
+
+# Knowledge scale
+
+One thing we would like to see is for the knowledge scale that we will be constructing to behave in the way that we would expect, if it were indeed measuring political knowledge. To begin with, let's look at a purely additive knowledge score, where we simply add up the number of correct answers for each observation. As can be seen from Figure \ref{fig:knowledge_scores}, such scores turn out to have a fairly normal distribution, with a mode at 4 correct responses.
+
+## Validity of purely additive scale
+
+Moreover, looking at Figure \ref{fig:additive_scale}, we see the type of relationship between level of knowledge and relevant demographic factors that we would expect, if the component items were in fact tapping into political knowledge: those with higher levels of education have more of it than those with lower levels [@hebbelstrup2016]; men know more than women [@vanheerdehudson2020; @plutzer2020]; those with higher levels of income have more of it than those with lower levels of income [@vowles2020; @plutzer2020; and older people have more of it than younger people [@plutzer2020].
+
+```{r knowledge_scores, fig.cap = "Distribution of knowledge score", echo=FALSE}
+df_all_years %>% 
+  ggplot() +
+  aes(x = k_sum) +
+  geom_histogram(fill="salmon", color="black")
+```
+
+```{r additive_scale, fig.cap = "Knowledge by level of education, gender, income, and age", echo=FALSE}
+plot_education <- df_all_years %>% 
+  group_by(d_education) %>% 
+  summarise(score = mean(k_sum)) %>% 
+  ggplot() +
+  aes(x = d_education, y = score, fill = d_education) +
+  geom_bar(stat = "identity") +
+  theme(legend.position="none") + 
+  coord_flip()
+
+plot_gender <- df_all_years %>% 
+  group_by(d_gender) %>% 
+  summarise(score = mean(k_sum)) %>% 
+  ggplot() +
+  aes(x = d_gender, y = score, fill = d_gender) +
+  geom_bar(stat = "identity") +
+  theme(legend.position="none") + 
+  coord_flip()
+
+plot_income <- df_all_years %>% 
+  group_by(d_income) %>% 
+  summarise(score = mean(k_sum)) %>% 
+  ggplot() +
+  aes(x = d_income, y = score, fill = d_income) +
+  geom_bar(stat = "identity") +
+  theme(legend.position="none") + 
+  coord_flip()
+
+plot_age <- df_all_years %>% 
+  group_by(d_age) %>% 
+  summarise(score = mean(k_sum)) %>% 
+  ggplot() +
+  aes(x = d_age, y = score, fill = d_age) +
+  geom_bar(stat = "identity") +
+  theme(legend.position="none") + 
+  coord_flip()
+
+ggarrange(plot_education, plot_gender, plot_income, plot_age, nrow = 2, ncol = 2)
+```
+
+## Dimensionality
+
+The previous section gives us some confidence in that a scale created out of the seven items in question will plausibly measure political knowledge. Additionally, we will want to we will want to determine whether it *only* measures political knowledge, i.e., whether the component items together form a single dimension. To begin woth, we will investigate this using parallell analysis.
+
+```{r parallel_analysis, fig.cap = "Parallel analysis", results='hide', echo=FALSE}
+all_items <- data.frame(df_all_years$k_c_rep,
+                        df_all_years$k_m_rep,
+                        df_all_years$k_s_rep,
+                        df_all_years$k_v_rep,
+                        df_all_years$k_nat_insurance,
+                        df_all_years$k_num_mps,
+                        df_all_years$k_spain_eu)
+
+par(mfrow=c(1, 1))
+psych::fa.parallel(all_items, fa="fa")
+```
+
+Looking at Figure \ref{fig:parallel_analysis} from the point of view of traditional scree plots, we would conclude that the items form a unidimensional scale, since the first factor is the only one with an eigenvalue greater than 1. However, the somewhat more exacting method of parallel analysis suggests that we might be dealing with two factors, as the plot does not drop below the simulated data until at three factors, the idea being that observed eigenvalues that lie above the corresponding random ones are more likely than those below to constitute meaningful factors.
+
+Let's do a quick exploratory factor analysis set to two factors to see how the individual items load onto the two factors:
+
+```{r, echo=FALSE}
+efa_poly <- fa.poly(all_items, 2)
+print(efa_poly$fa$loadings)
+```
+
+We see that the items relating to identifying specific politicians load fairly well onto one factor (with the exception of `k_s_rep`, which loads a bit awkwardly onto the first factor), while the other items load fairly well on the other. Do these constitute two different kinds of knowledge? Possibly. One way to dig deeper into this is via confirmatory factor analysis. Specifically, we can "force" all the items into a unidimensional model and then see how well that model fits the data, compared to a two-dimensional one, using a variety of fit measures.
+
+```{r, echo=FALSE, results='hide'}
+# let's compare fit of two models using CFA
+# one factor
+mod_1f <- 'know =~ k_s_rep + k_m_rep + k_c_rep + k_v_rep + k_nat_insurance + k_num_mps + k_spain_eu'
+mod_1f.fit <- cfa(mod_1f, data=df_all_years, ordered = TRUE)
+summary(mod_1f.fit, standardized=TRUE)
+# the Std.all column gives the type of loadings we would see in efa correlations between items and its latent. we want > 0.3.
+
+# RMSEA values less than 0.05 or 0.01 correspond to good and very good fit respectively (Andrews 2021)
+# want Comparative Fit Index (CFI) >0.95 (Dima 2018)
+# want Tucker-Lewis index (TLI) >0.95 (Dima 2018)
+# agfi: adjusted goodness of fit; 0-1, higher better
+
+# two factors
+mod_2f <- '
+          person_knowledge =~ k_s_rep + k_m_rep + k_c_rep + k_v_rep
+          issue_knowledge =~ k_nat_insurance + k_num_mps + k_spain_eu'
+mod_2f.fit <- cfa(mod_2f, data=df_all_years, ordered = TRUE)
+summary(mod_2f.fit, standardized=TRUE)
+```
+
+```{r, echo=FALSE}
+
+fit_tibble <- tibble(
+  fit_measure = c("RMSEA","CFI","TLI","AGFI"),
+  one_dimension = c(fitmeasures(mod_1f.fit)["rmsea"],
+                    fitmeasures(mod_1f.fit)["cfi"],
+                    fitmeasures(mod_1f.fit)["tli"],
+                    fitmeasures(mod_1f.fit)["agfi"]),
+  two_dimensions = c(fitmeasures(mod_2f.fit)["rmsea"],
+                     fitmeasures(mod_2f.fit)["cfi"],
+                     fitmeasures(mod_2f.fit)["tli"],
+                     fitmeasures(mod_2f.fit)["agfi"])
+)
+
+fit_tibble
+```
+
+For context, RMSEA values less than 0.05 or 0.01 correspond to good and very good fit respectively [@andrews2021]. We would want to see Comparative Fit Indexes (CFI) and Tucker-Lewis Indexes (TLI) > 0.95 [@dima2018]. For adjusted goodness of fit measures (AGFI), they fall in the range of 0-1, and the higher the better. So, what we see here is that the two-dimensional scale fits better than the unidimensional one, which is to be expected, although the latter by no means has a disastrous fit. 
+
+Since we are not working with a fully finalised data set, we will for purposes of illustrating the workflow simply assume unidimensionality in what follows, and now move on to fitting an item response theory model on the items in order to create a knowledge scale.
+
+## IRT scale
+
+We will use the `informationeffects` [@ahlstromvij2022] to fit an item response theory model to the knowledge items. This will give us a continuous knowledge measure. We'll then want to identify some cut-off point where by respondents who fall above it are 'informed' and those who don't are not. This is in order to subsequently causally model a (binary) "intervention", whereby we make all respondents informed, to see the effect this has on our dependent variables. 
+
+We start by fitting the items using the `info_scale` function from the `informationeffects` package.
+
+```{r, echo=TRUE, results='hide', fig.show='hide'}
+know_scale <- info_scale(items = c("k_s_rep",
+                                   "k_m_rep",
+                                   "k_c_rep",
+                                   "k_v_rep",
+                                   "k_nat_insurance",
+                                   "k_num_mps",
+                                   "k_spain_eu"),
+                         data = df_all_years,
+                         binary_cutoff = 0.75)
+```
+
+Figure \ref{fig:know_distribution} shows the distribution of knowledge scores. IRT modelled scores have no intrinsic meaning, but can be interpreted as *Z*-scores. A score of 0 corresponds to a level of knowledge/ability at an estimated mean; a score of 2 corresponds to a level of knowledge estimated to lie 2 standard deviations above the mean level, and so forth. We see that, in this case, the mode of the scale is at the mean level of knowledge, and the mean score in the sample is indeed at `r round(mean(know_scale$know_scores),4)`, to four significant digits.
+
+```{r know_distribution, fig.cap="Distribution of knowledge scores"}
+know_scale$know_scores %>% 
+  as.data.frame() %>% 
+  ggplot() +
+  aes(x = know_scale$know_scores) +
+  geom_histogram(bins = 7, fill = 'salmon', color = 'black')
+```
+
+It was mentioned above that we want to identify a cut-off whereby those who fall (at or) above it are 'informed' and those falling below it are not. The `binary_cutoff` parameter in the `info_scale` function sets the percentile for this cut-off. As can be seen above, this has here been set to the 75th percentile. Looking at the table below, we see that this splits the sample into 25% informed and 75% not, which balances rather nicely two theoretical desiderata: on the one hand, we want the 'informed' group to be small enough for it to be reasonable to refer to them as 'informed' in some sufficiently demanding sense; on the other hand, we don't want the groups to be so differently sized so that it will be difficult to balance the sample later on when calculating propensity score. A 25/75 split seems a good trade-off here.
+
+```{r, echo=FALSE}
+know_scale$know_scores_binary_tbl
+```
+
+Let's look at bit more closely at how the individual items perform in the context of the model. First, let's see how they each load on the single factor that we take to measure level of knowledge. Here, we are looking for items loading at above 0.3 at least, which is the case for each, with `X5` (`k_nat_insurance`) being borderline.
+
+```{r, echo=FALSE}
+know_scale$model_summary$rotF
+```
+
+Next, let's look at the IRT coefficients for each item. Here, we are looking for `a` values greater than 1, measuring the extent to which the relevant item does a good job of discriminating between the two categories (i.e., informed and not informed). The `b` values indicate at what point of the scale the item best measures a respondent's level of knowledge, with 0 again being the estimated mean.
+
+```{r, echo=FALSE}
+know_scale$model_coef
+```
+
+Finally, by looking at the test information plot, we can see at what point of the knowledge scale it offers the most information, which we can see in Figure \ref{fig:info_plot} being at around the mean level of knowledge.
+
+```{r info_plot, fig.cap="Test information plot", echo=FALSE}
+know_scale$info_plot
+```
+
+A valid IRT model (of this kind) has to meet three conditions:
+
+- Unidimensionality
+- Local independence
+- Good model fit
+
+We have already discussed unidimensionality above. Local independence is typically evaluated using Yen's Q3 [@yen1993]. For our model, we get the following Q3 values: 
+
+```{r, echo=FALSE}
+know_scale$q3
+```
+
+@yen1993 suggests a cut-off value of 0.2, but as pointed out by @deayala2009, a Q3 test tends to give inflated negative values for short tests. Indeed, Yen's own suggestion was in the context of scales with at least 17 items. For that reason, a value of `r round(min(know_scale$q3),4)` would seem acceptable, given the short scale.
+
+The most straightforward way to measure model fit is by way of empirical plots, given here in Figure \ref{fig:empirical_plots}. These show fairly good fit.
+
+```{r empirical_plots, fig.cap="Empirical plots", fig.width=9, fig.height=8, echo=FALSE}
+know_scale$empirical_plots
+```
+
+## Construct validity
+
+By performing the type of diagnostics covered in the previous sections, we can get a good sense of whether the model performs well from a formal perspective, i.e., in regards to unidimensionality, local independence, and model fit. However, we also would like to be able to validate that the score plausibly is measuring not just any trait, but specifically a form of political knowledge.
+
+The fact that a purely additive scale performed well on this score gives us some initial confidence that our IRT scale would as well. In order to confirm this, we may look at the estimated marginal means for each level of education, income, gender, and age, holding the others constant, which we can do using `info_emmeans()` (which, as the name suggests, employs `emmeans` under the hood). As can be seen from \ref{fig:construct_validity}, these means exhibit the same type of pattern that was discussed above in relation to the purely additive scale. This offers good evidence of construct validity.
+
+```{r construct_validity, fig.cap="Estimated marginal means", fig.width=8, fig.height=9, echo=FALSE}
+# construct validity
+marginal_means <- info_emmeans(knowledge_var = "knowledge",
+                               covariates = c("d_income", "d_education","d_gender","d_age"), 
+                               data = df_all_years)
+
+# show visually
+mm_income <- data.frame(marginal_means[[1]]) %>% 
+  ggplot() +
+  aes(x = d_income, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+
+mm_education <- data.frame(marginal_means[[2]]) %>% 
+  ggplot() +
+  aes(x = d_education, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+
+mm_gender <- data.frame(marginal_means[[3]]) %>% 
+  ggplot() +
+  aes(x = d_gender, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+
+mm_age <- data.frame(marginal_means[[4]]) %>% 
+  ggplot() +
+  aes(x = d_age, y = emmean, color = "salmon") +
+  geom_pointrange(aes(ymax=upper.CL, ymin=lower.CL)) +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  theme(legend.position="none")
+
+ggarrange(mm_education, mm_gender, mm_income, mm_age, nrow = 2, ncol = 2)
+```
+
+# Propensity scores
+
+We now have our knowledge scale, and so are getting closer to being able to do some information effects modeling. Information modeling is a type of counterfactual modeling, estimating the causal effect that we would have seen, had we been able to intervene on (i.e., increase) the knowledge variable. Best practice in counterfactual modeling is to rely on so-called doubly-robust estimation, which looks to approximate the situation we would have found ourselves in, had our data been the result of a randomized experimental design with a single treatment [@morganwinship2015]. The ‘double robustness’ owes to how effects are estimated in a context where we have both (a) controlled for assumed confounds (as in standard regression), and (2) taken steps to make up for the fact that the data have not come about as a result of randomized assignment. In the present case, this second layer of ‘robustness’ is achieved by using so-called ‘propensity scores’ as weights in the subsequent models.
+
+This is where the binary knowledge variable from before comes in. In our case, propensity scores measure the probability (i.e. propensity) that an observation will be found in the ‘fully informed’, binary category, as a function of someone’s demographic features. (It is possible to do propensity scoring with a continuous 'treatment', e.g., as in @hirano2004; however, at present, `informationeffects` only implements binary propensity scoring.) The idea is to then use these scores to remove any correlation between these features and the ‘informed’ category, to justify a counterfactual inference. 
+
+To see why, consider the paradigm of a randomized experimental design, where the random allocation of participants to a treatment and a control group means that no feature of the participant is predictive of being found in the treatment as opposed to in the control. Whether female or male, rich or poor (and so on), you are equally likely to end up in one group as opposed to in the other. In the case of observational data, by contrast, this might not be the case. It might (for example) be that some features of the observations -- such as, their level of education -- are predictive of ending up in the ‘informed’ category.
+
+In fact, let's look at the data at hand, to determine whether the demographic factors that we have reason to believe influence someone's degree of political knowledge -- again, gender, level of education, income, and age -- are in fact predictive of knowledge, as measured by our scale:
+
+```{r predictive}
+m <- glm(knowledge_binary ~ 
+           d_age +
+           d_education +
+           d_gender +
+           d_income,
+         data = df_all_years,
+         family = "binomial")
+summary(m)
+```
+
+Looking at the coefficient values for age, education, and income to begin with, we see that the difference in effect between the lowest age bracket, level of income, and income bracket increases as we move up the factor levels. These differences are in all cases also significant. The same goes for the difference in knowledge between men and women, with men knowing more than women. So, propensity scoring is certainly in order.
+
+Let's now calculate the propensity scores with `info_prop_scores` from the `informationeffects` package, and visualize them as a histogram to get a sense of their distribution (Figure \ref{fig:prop_scores_plot}):
+
+```{r prop_scores, echo=TRUE}
+df_all_years$prop_score <- info_prop_scores(knowledge_var = "knowledge_binary", 
+                                  covariates = c("d_age","d_gender","d_education","d_income"), 
+                                  data = df_all_years)
+```
+
+```{r prop_scores_plot, fig.cap="Distribution of propensity scores", fig.width=7, fig.height=5}
+df_all_years %>% 
+  ggplot() +
+  aes(x = prop_score) +
+  geom_histogram(binwidth=0.1, color = "black", fill = "salmon")
+```
+
+What we want to see in this distribution is a clustering of propensity scores towards the low end, and not too many extreme scores, which would suggest that the scores are working very hard to compensate for some serious imbalances. That said, extreme scores should not automatically be assumed to be incorrect [@levyetal2008], although one should be mindful that they of course have a disproportionate influence when subsequently using them as weights in our regression model. When properly estimated, however, such weighting will counteract any correlations between demographics and levels of political knowledge. Specifically, since propensity scores measure the probability of ending up in the ‘treatment’ category, given a set of covariates -- in our case, the probability that you would be ‘informed’, given your age, income, level of education and gender -- we can use the inverse of those scores as weights (such that an observation with a low propensity is weighted heavily) in fitting the model. Given an appropriately chosen set of covariates when calculating the scores, this recreates a situation that would have been expected in a randomized experiment, thereby allowing greater confidence in any counterfactual inference.
+
+Since the whole point of propensity scores is to balance the sample, we want to inspect whether we have been successful on that score. We can do that using balance plots by way of `info_bal_plots`, in turn relying on the `cobalt` package [@greifer2022]:
+
+```{r balance_plots, fig.caption="Balance plots", fig.width=7, fig.height=5}
+bal_plots <- info_bal_plots(knowledge_var = "knowledge_binary", 
+                            covariates = c("d_age", "d_gender", "d_income", "d_education"), 
+                            prop_score ="prop_score", 
+                            data = df_all_years)
+```
+
+We see that, in each case, balance has been improved by the propensity scores (the right pane in each of the graphs). Had that not been the case, we might have wanted to revisit the cut-off for being 'informed' (currently, 75th percentile or above), in case the balance between the two groups is so lopsided that it's difficult to balance them using propensity scores.
+
+# Information effects in the Swedish electorate over time
+
+```{r}
+# add party preference dummies
+df_all_years <- df_all_years %>% 
+  mutate(centerpartiet = case_when(d_partisanship == "centerpartiet" ~ 1,
+                                   TRUE ~ 0),
+         folkpartiet = case_when(d_partisanship == "folkpartiet" ~ 1,
+                                   TRUE ~ 0),
+         kristdemokraterna = case_when(d_partisanship == "kristdemokraterna" ~ 1,
+                                   TRUE ~ 0),
+         moderaterna = case_when(d_partisanship == "moderaterna" ~ 1,
+                                       TRUE ~ 0),
+         miljopartiet = case_when(d_partisanship == "miljöpartiet" ~ 1,
+                                       TRUE ~ 0),
+         socialdemokraterna = case_when(d_partisanship == "socialdemokraterna" ~ 1,
+                                         TRUE ~ 0),
+         sverigedemokraterna = case_when(d_partisanship == "sverigedemokraterna" ~ 1,
+                                        TRUE ~ 0),
+         vansterpartiet = case_when(d_partisanship == "vänsterpartiet" ~ 1,
+                                         TRUE ~ 0),
+         rostade_inte = case_when(d_partisanship == "rostade_inte" ~ 1,
+                              TRUE ~ 0))
+
+
+# probability of affirmation as a function of knowledge (continuous) and covariates
+m_reduce_pub_spend_cont <- glm(a_reduce_pub_spend ~ 
+                                 knowledge +
+                                 year:knowledge +
+                                 d_age +
+                                 d_gender +
+                                 d_class +
+                                 d_education +
+                                 d_income,
+                               data = df_all_years, 
+                               family = "binomial")
+
+m_sell_pub_comp_cont <- glm(a_sell_pub_comp ~ 
+                                 knowledge +
+                                 year:knowledge +
+                                 d_age +
+                                 d_gender +
+                                 d_class +
+                                 d_education +
+                                 d_income,
+                               data = df_all_years, 
+                               family = "binomial")
+
+m_priv_healthcare_cont <- glm(a_priv_healthcare ~ 
+                              knowledge +
+                              year:knowledge +
+                              d_age +
+                              d_gender +
+                              d_class +
+                              d_education +
+                              d_income,
+                            data = df_all_years, 
+                            family = "binomial")
+
+m_fewer_refugees_cont <- glm(a_fewer_refugees ~ 
+                                knowledge +
+                                year:knowledge +
+                                d_age +
+                                d_gender +
+                                d_class +
+                                d_education +
+                                d_income,
+                              data = df_all_years, 
+                              family = "binomial")
+
+m_law_order_cont <- glm(a_law_order ~ 
+                               knowledge +
+                               year:knowledge +
+                               d_age +
+                               d_gender +
+                               d_class +
+                               d_education +
+                               d_income,
+                             data = df_all_years, 
+                             family = "binomial")
+
+m_gender_equal_cont <- glm(a_gender_equal ~ 
+                          knowledge +
+                          year:knowledge +
+                          d_age +
+                          d_gender +
+                          d_class +
+                          d_education +
+                          d_income,
+                        data = df_all_years, 
+                        family = "binomial")
+
+m_no_nuclear_cont <- glm(a_no_nuclear ~ 
+                           knowledge +
+                           year:knowledge +
+                           d_age +
+                           d_gender +
+                           d_class +
+                           d_education +
+                           d_income,
+                         data = df_all_years, 
+                         family = "binomial")
+
+m_leave_eu_cont <- glm(a_leave_eu ~ 
+                         knowledge +
+                         year:knowledge +
+                         d_age +
+                         d_gender +
+                         d_class +
+                         d_education +
+                         d_income,
+                       data = df_all_years, 
+                       family = "binomial")
+
+m_join_nato_cont <- glm(a_join_nato ~ 
+                          knowledge +
+                          year:knowledge +
+                          d_age +
+                          d_gender +
+                          d_class +
+                          d_education +
+                          d_income,
+                        data = df_all_years, 
+                        family = "binomial")
+
+
+m_centerpartiet_cont <- glm(centerpartiet ~ 
+                          knowledge +
+                          year:knowledge +
+                          d_age +
+                          d_gender +
+                          d_class +
+                          d_education +
+                          d_income,
+                        data = df_all_years, 
+                        family = "binomial")
+
+m_folkpartiet_cont <- glm(folkpartiet ~ 
+                            knowledge +
+                            year:knowledge +
+                            d_age +
+                            d_gender +
+                            d_class +
+                            d_education +
+                            d_income,
+                          data = df_all_years, 
+                          family = "binomial")
+
+m_rostade_inte_cont <- glm(rostade_inte ~ 
+                           knowledge +
+                           year:knowledge +
+                           d_age +
+                           d_gender +
+                           d_class +
+                           d_education +
+                           d_income,
+                         data = df_all_years, 
+                         family = "binomial")
+
+m_kristdemokraterna_cont <- glm(kristdemokraterna ~ 
+                            knowledge +
+                            year:knowledge +
+                            d_age +
+                            d_gender +
+                            d_class +
+                            d_education +
+                            d_income,
+                          data = df_all_years, 
+                          family = "binomial")
+
+m_miljopartiet_cont <- glm(miljopartiet ~ 
+                             knowledge +
+                             year:knowledge +
+                             d_age +
+                             d_gender +
+                             d_class +
+                             d_education +
+                             d_income,
+                           data = df_all_years, 
+                           family = "binomial")
+
+m_moderaterna_cont <- glm(moderaterna ~ 
+                             knowledge +
+                             year:knowledge +
+                             d_age +
+                             d_gender +
+                             d_class +
+                             d_education +
+                             d_income,
+                           data = df_all_years, 
+                           family = "binomial")
+
+m_socialdemokraterna_cont <- glm(socialdemokraterna ~ 
+                                   knowledge +
+                                   year:knowledge +
+                                   d_age +
+                                   d_gender +
+                                   d_class +
+                                   d_education +
+                                   d_income,
+                                 data = df_all_years, 
+                                 family = "binomial")
+
+m_sverigedemokraterna_cont <- glm(sverigedemokraterna ~ 
+                                   knowledge +
+                                   year:knowledge +
+                                   d_age +
+                                   d_gender +
+                                   d_class +
+                                   d_education +
+                                   d_income,
+                                 data = df_all_years, 
+                                 family = "binomial")
+
+m_vansterpartiet_cont <- glm(vansterpartiet ~ 
+                                    knowledge +
+                                    year:knowledge +
+                                    d_age +
+                                    d_gender +
+                                    d_class +
+                                    d_education +
+                                    d_income,
+                                  data = df_all_years, 
+                                  family = "binomial")
+
+# attitudes
+pred_reduce_pub_spend <- ggpredict(m_reduce_pub_spend_cont, c("year","knowledge"))
+pred_sell_pub_comp <- ggpredict(m_sell_pub_comp_cont, c("year","knowledge"))
+pred_priv_healthcare <- ggpredict(m_priv_healthcare_cont, c("year","knowledge"))
+pred_fewer_refugees <- ggpredict(m_fewer_refugees_cont, c("year","knowledge"))
+pred_law_order <- ggpredict(m_law_order_cont, c("year","knowledge"))
+pred_gender_equal <- ggpredict(m_gender_equal_cont, c("year","knowledge"))
+pred_no_nuclear <- ggpredict(m_no_nuclear_cont, c("year","knowledge"))
+pred_leave_eu <- ggpredict(m_leave_eu_cont, c("year","knowledge"))
+pred_join_nato <- ggpredict(m_join_nato_cont, c("year","knowledge"))
+
+# party preference
+pred_centerpartiet <- ggpredict(m_centerpartiet_cont, c("year","knowledge"))
+pred_folkpartiet <- ggpredict(m_folkpartiet_cont, c("year","knowledge"))
+pred_rostade_inte <- ggpredict(m_rostade_inte_cont, c("year","knowledge"))
+pred_kristdemokraterna <- ggpredict(m_kristdemokraterna_cont, c("year","knowledge"))
+pred_moderaterna <- ggpredict(m_moderaterna_cont, c("year","knowledge"))
+pred_miljopartiet <- ggpredict(m_miljopartiet_cont, c("year","knowledge"))
+pred_socialdemokraterna <- ggpredict(m_socialdemokraterna_cont, c("year","knowledge"))
+pred_sverigedemokraterna <- ggpredict(m_sverigedemokraterna_cont, c("year","knowledge"))
+pred_vansterpartiet <- ggpredict(m_vansterpartiet_cont, c("year","knowledge"))
+
+pred_reduce_pub_spend$var <- "reduce_pub_spend"
+pred_sell_pub_comp$var <- "sell_pub"
+pred_priv_healthcare$var <- "priv_healthcare"
+pred_fewer_refugees$var <- "fewer_refugees"
+pred_law_order$var <- "law_order"
+pred_gender_equal$var <- "gender_equal"
+pred_no_nuclear$var <- "no_nuclear"
+pred_leave_eu$var <- "leave_eu"
+pred_join_nato$var <- "join_nato"
+
+pred_centerpartiet$var <- "centerpartiet"
+pred_folkpartiet$var <- "folkpartiet"
+pred_rostade_inte$var <- "rostade_inte"
+pred_kristdemokraterna$var <- "kristdemokraterna"
+pred_moderaterna$var <- "moderaterna"
+pred_miljopartiet$var <- "miljopartiet"
+pred_socialdemokraterna$var <- "socialdemokraterna"
+pred_sverigedemokraterna$var <- "sverigedemokraterna"
+pred_vansterpartiet$var <- "vansterpartiet"
+
+all_preds <- rbind(pred_reduce_pub_spend,
+                   pred_sell_pub_comp,
+                   pred_priv_healthcare,
+                   pred_fewer_refugees,
+                   pred_law_order,
+                   pred_gender_equal,
+                   pred_no_nuclear,
+                   pred_leave_eu,
+                   pred_join_nato,
+                   pred_centerpartiet,
+                   pred_folkpartiet,
+                   pred_rostade_inte,
+                   pred_kristdemokraterna,
+                   pred_moderaterna,
+                   pred_miljopartiet,
+                   pred_socialdemokraterna,
+                   pred_sverigedemokraterna,
+                   pred_vansterpartiet)
+```
+
+We are now in a position to model any information effects in the data set. We'll ask two questions: First, has the relationship between political knowledge and the variable in question - whether attitudinal or relating to party choice - been constant over the years? We can think of this as a form of omnibus test for information effects over time: do the effects found at different points in time? Assuming these effects have not been completely constant over time, we then get to our second question: How has the information effects developed over time? Have they grown or shrunk, and for what specific period, and to what specific extent?
+
+For each question, we will look at party choice and attitudinal variables separately.
+
+## Party choice: Have information effects remained constant over time?
+
+Figure \ref{fig:inf_constant_party_choice} shows the predicted probability of party choice as a function of different levels of political knowledge. We see that information effects have largely not been constant over time - i.e., the lines representing the slope for each year do not line up nicely - with the possible exception of voting for Folkpartiet: it has generally remained the case that, the more informed you are, the more likely you are to vote for Folkpartiet. On the other end of the spectrum, Socialdemokraterna seem to exhibit the greatest level of instability of information effects over time, as can be seen from the difference in slope between the years.
+
+```{r inf_constant_party_choice, fig.cap="Predicted probability of party choice over time"}
+# party preferences
+all_parties <- c("folkpartiet","centerpartiet","rostade_inte","kristdemokraterna",
+                 "moderaterna","miljopartiet","socialdemokraterna","sverigedemokraterna",
+                 "vansterpartiet", "Folkpartiet","Centerpartiet","Röstade inte","Kristdemokraterna",
+                 "Moderaterna","Miljöpartiet","Socialdemokraterna","Sverigedemokraterna",
+                 "Vänsterpartiet")
+
+all_preds %>% 
+  filter(var %in% all_parties) %>% 
+  mutate(group = as.numeric(as.character(group))) %>% 
+  ggplot() +
+  aes(x = group, y = predicted, group = x, color = x) +
+  geom_line() +
+  facet_wrap(~var, scales = "free_y")
+```
+
+## Political attitudes: Have information effects remained constant over time?
+
+Figure \ref{fig:inf_constant_attitudes} shows the same type of plot of predicted probability as a function of political knowledge but for attitudinal items. Here, the items showing the greatest commonality in effect across years is wanting a society marked by gender equality and wanting fewer refugees. Generally, across years, the more informed, the more likely are people to want more gender equality, and the less likely they are to want fewer refugees. The item that shows the greatest difference in slope across years is wanting to rid Sweden of nuclear power.
+
+```{r inf_constant_attitudes, fig.cap="Predicted probability of assenting by attitude item over time"}
+all_preds %>% 
+  filter(!var %in% all_parties) %>% 
+  mutate(group = as.numeric(as.character(group))) %>% 
+  ggplot() +
+  aes(x = group, y = predicted, group = x, color = x) +
+  geom_line() +
+  # geom_ribbon(aes(ymin=conf.low, ymax=conf.high), alpha=.3, linetype=0) +
+  facet_wrap(~var, scales = "free_y")
+```
+
+## Party choice: How have information effects changed over time?
+
+So, in the case of both party choice and attitudes, we see that information effects have not necessarily remained constant over the years. How have they changed? The best way to both measure effects over time, and also give a good sense of the effect *size*, is  to simulate for each year what percentage point difference it would make for each item, had each respondent been fully informed. This, of course, is exactly the way that @althaus2003 conceptualizes information effects in his landmark study, and also what we will be doing in what follows, starting with party choice.
+
+Figures \ref{fig:inf_effect_party} shows the information effect on party choice across years. The value for each year represents the difference between the mean level of support for the relevant party and the mean level of support predicted by the model, once each respondent has been set to be informed, which as per the above has been operationalized as being in the 75th percentile or above on the knowledge scale. The p-value reported for each item in the figure is from a one-way ANOVA of all such differences across the years, answering the question: for the relevant item, are any of the differences significantly different from one another? If 'no,' then that is evidence that the effect across years has remained constant; if 'yes,' that is evidence that they have not.
+
+We see that there has been a steady decrease in information effect for non-voters, such that it's decreasingly the case that knowing more makes you less likely to vote. We also see that there are significant differences in effects for Socialdemokraterna and Vänsterpartiet.
+
+```{r}
+m_reduce_pub_spend <- glm(a_reduce_pub_spend ~ 
+                            knowledge_binary +
+                            year:knowledge_binary +
+                            d_age +
+                            d_gender +
+                            d_class +
+                            d_education +
+                            d_income,
+                          data = df_all_years, 
+                          family = "binomial",
+                          weights = prop_score)
+
+m_sell_pub_comp  <- glm(a_sell_pub_comp ~ 
+                          knowledge_binary +
+                          year:knowledge_binary +
+                          d_age +
+                          d_gender +
+                          d_class +
+                          d_education +
+                          d_income,
+                        data = df_all_years, 
+                        family = "binomial",
+                        weights = prop_score)
+
+m_priv_healthcare  <- glm(a_priv_healthcare ~ 
+                            knowledge_binary +
+                            year:knowledge_binary +
+                            d_age +
+                            d_gender +
+                            d_class +
+                            d_education +
+                            d_income,
+                          data = df_all_years, 
+                          family = "binomial",
+                          weights = prop_score)
+
+m_fewer_refugees  <- glm(a_fewer_refugees ~ 
+                           knowledge_binary +
+                           year:knowledge_binary +
+                           d_age +
+                           d_gender +
+                           d_class +
+                           d_education +
+                           d_income,
+                         data = df_all_years, 
+                         family = "binomial",
+                         weights = prop_score)
+
+m_law_order  <- glm(a_law_order ~ 
+                      knowledge_binary +
+                      year:knowledge_binary +
+                      d_age +
+                      d_gender +
+                      d_class +
+                      d_education +
+                      d_income,
+                    data = df_all_years, 
+                    family = "binomial",
+                    weights = prop_score)
+
+m_gender_equal  <- glm(a_gender_equal ~ 
+                         knowledge_binary +
+                         year:knowledge_binary +
+                         d_age +
+                         d_gender +
+                         d_class +
+                         d_education +
+                         d_income,
+                       data = df_all_years, 
+                       family = "binomial",
+                       weights = prop_score)
+
+m_no_nuclear  <- glm(a_no_nuclear ~ 
+                       knowledge_binary +
+                       year:knowledge_binary +
+                       d_age +
+                       d_gender +
+                       d_class +
+                       d_education +
+                       d_income,
+                     data = df_all_years, 
+                     family = "binomial",
+                     weights = prop_score)
+
+m_leave_eu  <- glm(a_leave_eu ~ 
+                     knowledge_binary +
+                     year:knowledge_binary +
+                     d_age +
+                     d_gender +
+                     d_class +
+                     d_education +
+                     d_income,
+                   data = df_all_years, 
+                   family = "binomial",
+                   weights = prop_score)
+
+m_join_nato  <- glm(a_join_nato ~ 
+                      knowledge_binary +
+                      year:knowledge_binary +
+                      d_age +
+                      d_gender +
+                      d_class +
+                      d_education +
+                      d_income,
+                    data = df_all_years, 
+                    family = "binomial",
+                    weights = prop_score)
+
+m_centerpartiet  <- glm(centerpartiet ~ 
+                      knowledge_binary +
+                      year:knowledge_binary +
+                      d_age +
+                      d_gender +
+                      d_class +
+                      d_education +
+                      d_income,
+                    data = df_all_years, 
+                    family = "binomial",
+                    weights = prop_score)
+
+m_folkpartiet  <- glm(folkpartiet ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_rostade_inte  <- glm(rostade_inte ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_kristdemokraterna  <- glm(kristdemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_miljopartiet  <- glm(miljopartiet ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_moderaterna  <- glm(moderaterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_socialdemokraterna  <- glm(socialdemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_sverigedemokraterna  <- glm(sverigedemokraterna ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+m_vansterpartiet  <- glm(vansterpartiet ~ 
+                        knowledge_binary +
+                        year:knowledge_binary +
+                        d_age +
+                        d_gender +
+                        d_class +
+                        d_education +
+                        d_income,
+                      data = df_all_years, 
+                      family = "binomial",
+                      weights = prop_score)
+
+# look at percentage point information effect over time
+df_informed <- df_all_years %>% 
+  mutate(knowledge_binary = 1)
+
+df_informed$a_reduce_pub_spend_informed <- predict(m_reduce_pub_spend, newdata = df_informed, type = "response")
+df_informed$a_sell_pub_comp_informed <- predict(m_sell_pub_comp, newdata = df_informed, type = "response")
+df_informed$a_priv_healthcare_informed <- predict(m_priv_healthcare, newdata = df_informed, type = "response")
+df_informed$a_fewer_refugees_informed <- predict(m_fewer_refugees, newdata = df_informed, type = "response")
+df_informed$a_law_order_informed <- predict(m_law_order, newdata = df_informed, type = "response")
+df_informed$a_gender_equal_informed <- predict(m_gender_equal, newdata = df_informed, type = "response")
+df_informed$a_no_nuclear_informed <- predict(m_no_nuclear, newdata = df_informed, type = "response")
+df_informed$a_leave_eu_informed <- predict(m_leave_eu, newdata = df_informed, type = "response")
+df_informed$a_join_nato_informed <- predict(m_join_nato, newdata = df_informed, type = "response")
+
+df_informed$centerpartiet_informed <- predict(m_centerpartiet, newdata = df_informed, type = "response")
+df_informed$folkpartiet_informed <- predict(m_folkpartiet, newdata = df_informed, type = "response")
+df_informed$rostade_inte_informed <- predict(m_rostade_inte, newdata = df_informed, type = "response")
+df_informed$kristdemokraterna_informed <- predict(m_kristdemokraterna, newdata = df_informed, type = "response")
+df_informed$miljopartiet_informed <- predict(m_miljopartiet, newdata = df_informed, type = "response")
+df_informed$moderaterna_informed <- predict(m_moderaterna, newdata = df_informed, type = "response")
+df_informed$socialdemokraterna_informed <- predict(m_socialdemokraterna, newdata = df_informed, type = "response")
+df_informed$sverigedemokraterna_informed <- predict(m_sverigedemokraterna, newdata = df_informed, type = "response")
+df_informed$vansterpartiet_informed <- predict(m_vansterpartiet, newdata = df_informed, type = "response")
+
+sig_diff <- function(inf_var, act_var, data) {
+  diff = data[inf_var] - data[act_var]
+  year = data$year
+  df <- cbind(diff, year)
+  m <- aov(df[[1]] ~ df[[2]])
+  return(summary(m)[[1]]$`Pr(>F)`[1])
+}
+
+sig_diffs_party <- tibble(
+  variable = c("Centerpartiet",
+               "Folkpartiet",
+               "Kristdemokraterna",
+               "Miljöpartiet",
+               "Moderaterna",
+               "Socialdemokraterna",
+               "Sverigedemokraterna",
+               "Vänsterpartiet",
+               "Röstade inte"),
+  p_val = c(sig_diff("centerpartiet_informed", "centerpartiet", df_informed),
+            sig_diff("folkpartiet_informed", "folkpartiet", df_informed),
+            sig_diff("centerpartiet_informed", "centerpartiet", df_informed),
+            sig_diff("miljopartiet_informed", "miljopartiet", df_informed),
+            sig_diff("moderaterna_informed", "moderaterna", df_informed),
+            sig_diff("socialdemokraterna_informed", "socialdemokraterna", df_informed),
+            sig_diff("sverigedemokraterna_informed", "sverigedemokraterna", df_informed),
+            sig_diff("vansterpartiet_informed", "vansterpartiet", df_informed),
+            sig_diff("rostade_inte_informed", "rostade_inte", df_informed))
+) %>% 
+  mutate(p_val = round(p_val, 4))
+
+df_informed <- df_informed %>% 
+  mutate(a_reduce_pub_spend = as.numeric(a_reduce_pub_spend),
+         a_sell_pub_comp = as.numeric(a_sell_pub_comp),
+         a_priv_healthcare = as.numeric(a_priv_healthcare),
+         a_fewer_refugees = as.numeric(a_fewer_refugees),
+         a_law_order = as.numeric(a_law_order),
+         a_gender_equal = as.numeric(a_gender_equal),
+         a_no_nuclear = as.numeric(a_no_nuclear),
+         a_leave_eu = as.numeric(a_leave_eu),
+         a_join_nato = as.numeric(a_join_nato))
+
+sig_diffs_attitude <- tibble(
+  variable = c("Reduce public sector",
+               "Privatise state-owned businesses",
+               "Increase private health care",
+               "Accept fewer refugees",
+               "More law and order",
+               "More gender equality",
+               "Abolish nuclear power",
+               "Leave the EU",
+               "Join NATO"),
+  p_val = c(sig_diff("a_reduce_pub_spend_informed", "a_reduce_pub_spend", df_informed),
+            sig_diff("a_sell_pub_comp_informed", "a_sell_pub_comp", df_informed),
+            sig_diff("a_priv_healthcare_informed", "a_priv_healthcare", df_informed),
+            sig_diff("a_fewer_refugees_informed", "a_fewer_refugees", df_informed),
+            sig_diff("a_law_order_informed", "a_law_order", df_informed),
+            sig_diff("a_gender_equal_informed", "a_gender_equal", df_informed),
+            sig_diff("a_no_nuclear_informed", "a_no_nuclear", df_informed),
+            sig_diff("a_leave_eu_informed", "a_leave_eu", df_informed),
+            sig_diff("a_join_nato_informed", "a_join_nato", df_informed))
+) %>% 
+  mutate(p_val = round(p_val, 4))
+```
+
+```{r inf_effect_party, fig.cap="Information effect on party choice over time", fig.height=10}
+df_informed %>% 
+  group_by(year) %>% 
+  summarise("Centerpartiet" = mean(centerpartiet_informed) - mean(centerpartiet),
+            "Folkpartiet" = mean(folkpartiet_informed) - mean(folkpartiet),
+            "Kristdemokraterna" = mean(kristdemokraterna_informed) - mean(kristdemokraterna),
+            "Miljöpartiet" = mean(miljopartiet_informed) - mean(miljopartiet),
+            "Moderaterna" = mean(moderaterna_informed) - mean(moderaterna),
+            "Socialdemokraterna" = mean(socialdemokraterna_informed) - mean(socialdemokraterna),
+            "Sverigedemokraterna" = mean(sverigedemokraterna_informed) - mean(sverigedemokraterna),
+            "Vänsterpartiet" = mean(vansterpartiet_informed) - mean(vansterpartiet),
+            "Röstade inte" = mean(rostade_inte_informed) - mean(rostade_inte))  %>% 
+  pivot_longer(cols = -year,
+               names_to = "variable",
+               values_to = "difference")  %>% 
+  mutate(difference = difference * 100) %>% 
+  ggplot() +
+  aes(x = year, y = difference, color = variable) +
+  geom_point() +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  geom_text(aes(x=1, y=5.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_party, hjust = 0) +
+  labs(title = "Information effects on party choice over time",
+       subtitle = "Differences between actual and simulated fully informed support",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
+       x = "",
+       y = "Difference (percentage points)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none") +
+  facet_wrap(~variable)
+```
+
+## Political attitudes: How have information effects changed over time?
+
+Figures \ref{fig:inf_effect_attitudes} gives the information effects for each attitude item, in the same manner as for party choice above. We see that there are significant differences between effects across years for wanting to accept refugees, wanting to leave the EU, and wanting more law and order.
+
+```{r inf_effect_attitudes, fig.cap="Information effect on political attitudes over time", fig.height=10}
+df_informed %>% 
+  group_by(year) %>% 
+  summarise("Reduce public sector" = mean(a_reduce_pub_spend_informed) - mean(a_reduce_pub_spend),
+            "Privatise state-owned businesses" = mean(a_sell_pub_comp_informed) - mean(a_sell_pub_comp),
+            "Increase private health care" = mean(a_priv_healthcare_informed) - mean(a_priv_healthcare),
+            "Accept fewer refugees" = mean(a_fewer_refugees_informed) - mean(a_fewer_refugees),
+            "More law and order" = mean(a_law_order_informed) - mean(a_law_order),
+            "More gender equality" = mean(a_gender_equal_informed) - mean(a_gender_equal),
+            "Abolish nuclear power" = mean(a_no_nuclear_informed) - mean(a_no_nuclear),
+            "Leave the EU" = mean(a_leave_eu_informed) - mean(a_leave_eu),
+            "Join NATO" = mean(a_join_nato_informed) - mean(a_join_nato))  %>% 
+  pivot_longer(cols = -year,
+               names_to = "variable",
+               values_to = "difference")  %>% 
+  mutate(difference = difference * 100) %>% 
+  ggplot() +
+  aes(x = year, y = difference, color = variable) +
+  geom_point() +
+  geom_line(group = 1) +
+  geom_hline(yintercept=0, color = "grey") +
+  geom_text(aes(x=1, y=3.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_attitude, hjust = 0) +
+  labs(title = "Information effects on POLITICAL ATTITUDES in the Swedish electorate over time",
+       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
+       caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
+       x = "",
+       y = "Difference (percentage points)") +
+  theme(plot.title = element_text(face="bold")) +
+  theme(legend.position="none") +
+  facet_wrap(~variable)
+```
+
+# References
