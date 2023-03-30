@@ -53,7 +53,7 @@ df_all_years <- df_all_years %>%
 
 # Introduction
 
-What difference does knowledge make to political attitudes or political behaviors? One established way of quantifying such differences is through so-called information effects [@althaus2003; @bartels1996], i.e., estimated differences between actual patterns of attitudes or choices and the patterns we likely would see, had people been more (or fully) informed. The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example, @ahlstromvij2020-moddemo models an informed EU referendum in the UK, and sees the proportion of 'Remain' swing from a minority to a majority. @blaisetal2009 simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. @oscarsson2007 simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them. 
+What difference does knowledge make to political attitudes or political behaviors? One established way of quantifying such differences is through so-called information effects [@althaus2003; @bartels1996], i.e., estimated differences between actual patterns of attitudes or choices and the patterns we likely would see, had people been more (or fully) informed. The information effects literature makes clear that knowledge does matter for politics, and can in some cases even change the electoral outcome. For example, @ahlstromvijallen2023 model an informed EU referendum in the UK, and sees the proportion of 'Remain' swing from a minority to a majority. @blaisetal2009 simulate the outcome of six past Canadian elections, involving three to four parties, with fully informed voters, and see a likely difference in outcome in one. @oscarsson2007 simulates six past Swedish elections, involving eight main parties, and sees a likely difference in outcome in two of them. 
 
 Information effects modeling can also be used to look at the influence of knowledge on political opinion over time. For example, @ahlstromvij-posttruth uses ANES data to evaluate the idea that we have entered a "post-truth era", by arguing that, if we have, we should expect to see decreasing information effects on central political issues over time. That is, we should expect to see knowledge making less of a difference to what we want or do in the political realm over time. This turns out to be the case: Ahlstrom-Vij shows that, at least in a US context, we see a decrease in information effects on party preferences as well as on key, political issues -- immigration, same-sex adoption, and gun laws, in particular -- in the period of 2004 to 2016. This offers some novel, empirical evidence for the "post-truth" narrative.
 
@@ -82,7 +82,7 @@ The following variables occurred in each data set, and were extracted as potenti
 -   Bra/dåligt förslag: satsa på ett samhälle med mer lag och ordning? (5 point response scale)
 -   Bra/dåligt förslag: satsa på ett samhälle med mer jämställdhet mellan män och kvinnor? (5 point response scale; note: reformulated in 2018 data)
 
-With the exception of the party choice variable, these were all recoded as binary variables, such that a response of 1 or 2 on the 5 point scale represented support for the proposal, and opposition otherwise.
+With the exception of the party choice variable, these were all recoded as binary variables, such that a response of 1 or 2 on the 5 point scale represented support for the proposal, and a lack of support otherwise.
 
 Finally, each data set contained a number of knowledge items. One type concerned the respondent's ability to identify the party of a named individual (e.g., "Här är en lista med namn på olika personer. Kan du tala om vilket parti som var och en av dem tillhör?"). Representatives of four of the main parties occurred in each data set, i.e., S, M, C, and V, and where therefore extracted as four separate knowledge items (True/False) Additionally, the following three items could also be found in each data set, for a total of seven knowledge items:
 
@@ -136,7 +136,7 @@ One thing we would like to see is for the knowledge scale that we will be constr
 
 ## Validity of purely additive scale
 
-Moreover, looking at Figure \ref{fig:additive_scale}, we see the type of relationship between level of knowledge and relevant demographic factors that we would expect, if the component items were in fact tapping into political knowledge: those with higher levels of education have more of it than those with lower levels [@hebbelstrup2016]; men know more than women [@vanheerdehudson2020; @plutzer2020]; those with higher levels of income have more of it than those with lower levels of income [@vowles2020; @plutzer2020; and older people have more of it than younger people [@plutzer2020].
+Moreover, looking at Figure \ref{fig:additive_scale}, we see the type of relationship between level of knowledge and relevant demographic factors that we would expect, if the component items were in fact tapping into political knowledge: those with higher levels of education have more of it than those with lower levels [@hebbelstrup2016]; men know more than women [@vanheerdehudson2020; @plutzer2020]; those with higher levels of income have more of it than those with lower levels of income [@vowles2020; @plutzer2020]; and older people have more of it than younger people [@plutzer2020].
 
 ```{r knowledge_scores, fig.cap = "Distribution of knowledge score", echo=FALSE}
 df_all_years %>% 
@@ -187,7 +187,7 @@ ggarrange(plot_education, plot_gender, plot_income, plot_age, nrow = 2, ncol = 2
 
 ## Dimensionality
 
-The previous section gives us some confidence in that a scale created out of the seven items in question will plausibly measure political knowledge. Additionally, we will want to we will want to determine whether it *only* measures political knowledge, i.e., whether the component items together form a single dimension. To begin woth, we will investigate this using parallell analysis.
+The previous section gives us some confidence in that a scale created out of the seven items in question will plausibly measure political knowledge. Additionally, we need to determine whether it *only* measures political knowledge, i.e., whether the component items together form a single dimension. To begin with, we will investigate this using parallel analysis.
 
 ```{r parallel_analysis, fig.cap = "Parallel analysis", results='hide', echo=FALSE}
 all_items <- data.frame(df_all_years$k_c_rep,
@@ -257,7 +257,7 @@ Since we are not working with a fully finalised data set, we will for purposes o
 
 ## IRT scale
 
-We will use the `informationeffects` [@ahlstromvij2022] to fit an item response theory model to the knowledge items. This will give us a continuous knowledge measure. We'll then want to identify some cut-off point where by respondents who fall above it are 'informed' and those who don't are not. This is in order to subsequently causally model a (binary) "intervention", whereby we make all respondents informed, to see the effect this has on our dependent variables. 
+We will use the `informationeffects` package [@ahlstromvij2022] to fit an item response theory model to the knowledge items. This will give us a continuous knowledge measure. We'll then want to identify some cut-off point where by respondents who fall above it are 'informed' and those who don't are not. This is in order to subsequently causally model a (binary) "intervention", whereby we make all respondents informed, to see the effect this has on our dependent variables. 
 
 We start by fitting the items using the `info_scale` function from the `informationeffects` package.
 
@@ -719,7 +719,7 @@ For each question, we will look at party choice and attitudinal variables separa
 
 ## Party choice: Have information effects remained constant over time?
 
-Figure \ref{fig:inf_constant_party_choice} shows the predicted probability of party choice as a function of different levels of political knowledge. We see that information effects have largely not been constant over time - i.e., the lines representing the slope for each year do not line up nicely - with the possible exception of voting for Folkpartiet: it has generally remained the case that, the more informed you are, the more likely you are to vote for Folkpartiet. On the other end of the spectrum, Socialdemokraterna seem to exhibit the greatest level of instability of information effects over time, as can be seen from the difference in slope between the years.
+Figure \ref{fig:inf_constant_party_choice} shows the predicted probability of party choice as a function of different levels of political knowledge. We see that information effects have largely not been constant over time - i.e., the lines representing the slope for each year do not line up nicely - with the possible exception of voting for Vänsterpartiet: it has generally remained the case that, the more informed you are, the more likely you are to vote for Vänsterpartiet.
 
 ```{r inf_constant_party_choice, fig.cap="Predicted probability of party choice over time"}
 # party preferences
@@ -740,7 +740,7 @@ all_preds %>%
 
 ## Political attitudes: Have information effects remained constant over time?
 
-Figure \ref{fig:inf_constant_attitudes} shows the same type of plot of predicted probability as a function of political knowledge but for attitudinal items. Here, the items showing the greatest commonality in effect across years is wanting a society marked by gender equality and wanting fewer refugees. Generally, across years, the more informed, the more likely are people to want more gender equality, and the less likely they are to want fewer refugees. The item that shows the greatest difference in slope across years is wanting to rid Sweden of nuclear power.
+Figure \ref{fig:inf_constant_attitudes} shows the same type of plot of predicted probability as a function of political knowledge but for attitudinal items. Here, the items showing the greatest commonality in effect across years is wanting a society marked by gender equality, wanting fewer refugees, and wanting to rid Sweden of nuclear power. Generally, across years, the more informed, the more likely are people to want more gender equality and to rid Sweden of nuclear power, and the less likely they are to want fewer refugees.
 
 ```{r inf_constant_attitudes, fig.cap="Predicted probability of assenting by attitude item over time"}
 all_preds %>% 
@@ -757,9 +757,12 @@ all_preds %>%
 
 So, in the case of both party choice and attitudes, we see that information effects have not necessarily remained constant over the years. How have they changed? The best way to both measure effects over time, and also give a good sense of the effect *size*, is  to simulate for each year what percentage point difference it would make for each item, had each respondent been fully informed. This, of course, is exactly the way that @althaus2003 conceptualizes information effects in his landmark study, and also what we will be doing in what follows, starting with party choice.
 
-Figures \ref{fig:inf_effect_party} shows the information effect on party choice across years. The value for each year represents the difference between the mean level of support for the relevant party and the mean level of support predicted by the model, once each respondent has been set to be informed, which as per the above has been operationalized as being in the 75th percentile or above on the knowledge scale. The p-value reported for each item in the figure is from a one-way ANOVA of all such differences across the years, answering the question: for the relevant item, are any of the differences significantly different from one another? If 'no,' then that is evidence that the effect across years has remained constant; if 'yes,' that is evidence that they have not.
+Figure \ref{fig:inf_effect_party} shows the information effect on party choice across years. The value for each year represents the difference between the mean level of support for the relevant party and the mean level of support predicted by the model, once each respondent has been set to be informed, which as per the above has been operationalized as being in the 75th percentile or above on the knowledge scale. We see a couple of things:
 
-We see that there has been a steady decrease in information effect for non-voters, such that it's decreasingly the case that knowing more makes you less likely to vote. We also see that there are significant differences in effects for Socialdemokraterna and Vänsterpartiet.
+- That there has been a steady decrease in information effect for non-voters, such that it's decreasingly the case that knowing more makes you less likely to vote. 
+- Over the years, it has generally been the case that, had the electorate been fully informed, Centerpartiet, Folkpartiet, Kristdemokraterna, and Vänsterpartiet would have seen an increased vote share. By contrast, Socialdemokraterna would likely have seen a decreased vote share.
+- The direction of effect for Miljöpartiet and Moderaterna has fluctuated over time.
+- The effect for Sverigedemokraterna is fairly minimal.
 
 ```{r}
 m_reduce_pub_spend <- glm(a_reduce_pub_spend ~ 
@@ -1087,7 +1090,7 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  geom_text(aes(x=1, y=5.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_party, hjust = 0) +
+  # geom_text(aes(x=1, y=5.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_party, hjust = 0) +
   labs(title = "Information effects on party choice over time",
        subtitle = "Differences between actual and simulated fully informed support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
@@ -1100,7 +1103,10 @@ df_informed %>%
 
 ## Political attitudes: How have information effects changed over time?
 
-Figures \ref{fig:inf_effect_attitudes} gives the information effects for each attitude item, in the same manner as for party choice above. We see that there are significant differences between effects across years for wanting to accept refugees, wanting to leave the EU, and wanting more law and order.
+Figures \ref{fig:inf_effect_attitudes} gives the information effects for each attitude item, in the same manner as for party choice above. We see a couple of things:
+
+- It has generally been the case that, had the electorate been fully informed, we would have seeen an increased proportion of support for abolishing nuclear power, increasing private health care, joining NATO, more gender equality, privatising state-owned businesses, and reducing the public sector.
+- It is decreasingly the case that, had the electorate been informed, they would have been less likely to want to accept fewer refugees, a society of law and order, and to leave the EU. Indeed, on the latter, the effect is positive for 2014 and 2018.
 
 ```{r inf_effect_attitudes, fig.cap="Information effect on political attitudes over time", fig.height=10}
 df_informed %>% 
@@ -1123,9 +1129,9 @@ df_informed %>%
   geom_point() +
   geom_line(group = 1) +
   geom_hline(yintercept=0, color = "grey") +
-  geom_text(aes(x=1, y=3.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_attitude, hjust = 0) +
-  labs(title = "Information effects on POLITICAL ATTITUDES in the Swedish electorate over time",
-       subtitle = "Effects measure differences between actual and simulated fully informed levels of support",
+  # geom_text(aes(x=1, y=3.5, label=paste("p = ", p_val), colour = NULL), data = sig_diffs_attitude, hjust = 0) +
+  labs(title = "Information effects on political attitudes over time",
+       subtitle = "Differences between actual and simulated fully informed levels of support",
        caption = "Data: SNES 1998, 2002, 2006, 2010, 2014, and 2018",
        x = "",
        y = "Difference (percentage points)") +
